@@ -27,17 +27,25 @@ export const querySchema: FormSchemaGetter = () => [
 
 export const columns: VxeGridProps['columns'] = [
   {
+    field: 'deptId',
+    title: 'ID',
+    width: 80,
+  },
+  {
     field: 'deptName',
+    minWidth: 200,
     title: '部门名称',
     treeNode: true,
   },
   {
     field: 'deptCategory',
     title: '类别编码',
+    width: 100,
   },
   {
     field: 'orderNum',
     title: '排序',
+    width: 80,
   },
   {
     field: 'status',
