@@ -130,7 +130,7 @@ function handleDownloadExcel() {
       <template #toolbar-tools>
         <Space>
           <a-button
-            v-access:code="['chat:chatapp:export']"
+            v-access:code="['system:chatapp:export']"
             @click="handleDownloadExcel"
           >
             {{ $t('pages.common.export') }}
@@ -139,13 +139,13 @@ function handleDownloadExcel() {
             :disabled="!vxeCheckboxChecked(tableApi)"
             danger
             type="primary"
-            v-access:code="['chat:chatapp:remove']"
+            v-access:code="['system:chatapp:remove']"
             @click="handleMultiDelete">
             {{ $t('pages.common.delete') }}
           </a-button>
           <a-button
             type="primary"
-            v-access:code="['chat:chatapp:add']"
+            v-access:code="['system:chatapp:add']"
             @click="handleAdd"
           >
             {{ $t('pages.common.add') }}
@@ -155,7 +155,7 @@ function handleDownloadExcel() {
       <template #action="{ row }">
         <Space>
           <ghost-button
-            v-access:code="['chat:chatapp:edit']"
+            v-access:code="['system:chatapp:edit']"
             @click.stop="handleEdit(row)"
           >
             {{ $t('pages.common.edit') }}
@@ -168,7 +168,7 @@ function handleDownloadExcel() {
           >
             <ghost-button
               danger
-              v-access:code="['chat:chatapp:remove']"
+              v-access:code="['system:chatapp:remove']"
               @click.stop=""
             >
               {{ $t('pages.common.delete') }}
