@@ -32,6 +32,16 @@ export interface ChatappVO {
   appShow: string;
 
   /**
+   * 欢迎语
+   */
+  welcomeMsg: string;
+
+  /**
+   * 预设问题列表
+   */
+  presetQuestions: string[];
+
+  /**
    * 状态（0正常 1停用）
    */
   status: string;
@@ -83,6 +93,16 @@ export interface ChatappForm extends BaseEntity {
    * 应用图标
    */
   appShow?: string;
+
+  /**
+   * 欢迎语
+   */
+  welcomeMsg?: string;
+
+  /**
+   * 预设问题列表
+   */
+  presetQuestions?: string[];
 
   /**
    * 状态（0正常 1停用）

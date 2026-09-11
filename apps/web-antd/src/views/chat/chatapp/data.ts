@@ -118,57 +118,7 @@ export const modalSchema: FormSchemaGetter = () => [
     },
   },
   {
-    label: '应用名称',
-    fieldName: 'appName',
-    component: 'Input',
-    rules: 'required',
-  },
-  {
-    label: '应用类型',
-    fieldName: 'appType',
-    component: 'Select',
-    componentProps: {
-      // 可选从 DictEnum 中获取字典选项，便于统一维护: DictEnum.APP_TYPE
-      options: getDictOptions('app_type'),
-    },
-  },
-  {
-    label: '服务商编码',
-    fieldName: 'providerCode',
-    component: 'Select',
-    componentProps: {
-      // 可选从 DictEnum 中获取字典选项，便于统一维护: DictEnum.APP_PROVIDER
-      options: getDictOptions('app_provider'),
-    },
-    rules: 'selectRequired',
-  },
-  {
-    label: '请求地址',
-    fieldName: 'apiHost',
-    component: 'Textarea',
-    rules: 'required',
-  },
-  {
-    label: '密钥',
-    fieldName: 'apiKey',
-    component: 'Textarea',
-  },
-  {
-    label: '应用描述',
-    fieldName: 'appDescribe',
-    component: 'Textarea',
-  },
-  {
-    label: '应用图标',
-    fieldName: 'appShow',
-    component: 'ImageUpload',
-    componentProps: {
-      // accept: ['jpg', 'png'], // 支持的文件类型（扩展名，不带点）或 MIME 类型（如 image/png）
-      // maxNumber: 1, // 最大上传文件数，默认为 1，为 1 时绑定为 string 类型，否则为 string[] 类型
-      // resultField: 'url', // 上传成功后返回的字段名，默认 'url'，可选: 'ossId' | 'url' | 'fileName'
-    },
-  },
-  {
+    // 与应用名称同行
     label: '状态',
     fieldName: 'status',
     component: 'RadioGroup',
@@ -180,8 +130,90 @@ export const modalSchema: FormSchemaGetter = () => [
     },
   },
   {
+    // 与状态同行
+    label: '应用名称',
+    fieldName: 'appName',
+    component: 'Input',
+    rules: 'required',
+  },
+  {
+    // 与服务商编码同行
+    label: '应用类型',
+    fieldName: 'appType',
+    component: 'Select',
+    componentProps: {
+      // 可选从 DictEnum 中获取字典选项，便于统一维护: DictEnum.APP_TYPE
+      options: getDictOptions('app_type'),
+    },
+  },
+  {
+    // 与应用类型同行
+    label: '服务商编码',
+    fieldName: 'providerCode',
+    component: 'Select',
+    componentProps: {
+      // 可选从 DictEnum 中获取字典选项，便于统一维护: DictEnum.APP_PROVIDER
+      options: getDictOptions('app_provider'),
+    },
+    rules: 'selectRequired',
+  },
+  {
+    // 与密钥同行
+    label: '请求地址',
+    fieldName: 'apiHost',
+    component: 'Textarea',
+    componentProps: {
+      rows: 2,
+    },
+    rules: 'required',
+  },
+  {
+    // 与请求地址同行
+    label: '密钥',
+    fieldName: 'apiKey',
+    component: 'Textarea',
+    componentProps: {
+      rows: 2,
+    },
+  },
+  {
+    // 与备注同行
+    label: '应用描述',
+    fieldName: 'appDescribe',
+    component: 'Textarea',
+    componentProps: {
+      rows: 2,
+    },
+  },
+  {
+    // 与应用描述同行
     label: '备注',
     fieldName: 'remark',
     component: 'Textarea',
+    componentProps: {
+      rows: 2,
+    },
   },
+  {
+    // 与应用图标同行
+    label: '欢迎语',
+    fieldName: 'welcomeMsg',
+    component: 'Input',
+    componentProps: {
+      placeholder: '请输入欢迎语',
+      maxlength: 1000,
+    },
+  },
+  {
+    // 与欢迎语同行
+    label: '应用图标',
+    fieldName: 'appShow',
+    component: 'ImageUpload',
+    componentProps: {
+      // accept: ['jpg', 'png'], // 支持的文件类型（扩展名，不带点）或 MIME 类型（如 image/png）
+      // maxNumber: 1, // 最大上传文件数，默认为 1，为 1 时绑定为 string 类型，否则为 string[] 类型
+      // resultField: 'url', // 上传成功后返回的字段名，默认 'url'，可选: 'ossId' | 'url' | 'fileName'
+    },
+  },
+  // 预设问题在 modal 中渲染，不放进表单 schema
 ];
