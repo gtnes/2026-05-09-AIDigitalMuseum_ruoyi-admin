@@ -8,7 +8,7 @@ import { $t } from '@vben/locales';
 import { cloneDeep } from '@vben/utils';
 
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons-vue';
-import { InputNumber, message, Select, Textarea } from 'ant-design-vue';
+import { Input, InputNumber, message, Select, Textarea } from 'ant-design-vue';
 import dayjs from 'dayjs';
 
 import { useVbenForm } from '#/adapter/form';
@@ -38,6 +38,7 @@ function addAppRow() {
     idleImgUrl: '',
     talkingGifUrl: '',
     description: '',
+    duty: '',
     sort: chatappRows.length + 1,
   });
 }
@@ -131,6 +132,7 @@ const [BasicModal, modalApi] = useVbenModal({
           idleImgUrl: item.idleImgUrl,
           talkingGifUrl: item.talkingGifUrl,
           description: item.description,
+          duty: item.duty,
           sort: item.sort,
         })),
       );
@@ -243,7 +245,7 @@ async function handleCancel() {
             删除
           </a-button>
         </div>
-        <div class="grid grid-cols-2 gap-x-4">
+        <div class="grid grid-cols-3 gap-x-4">
           <div class="mb-2">
             <div class="mb-1 text-xs text-gray-500">
               <span class="text-red-500">*</span> 智能体
@@ -255,6 +257,13 @@ async function handleCancel() {
               show-search
               option-filter-prop="label"
               class="w-full"
+            />
+          </div>
+          <div class="mb-2">
+            <div class="mb-1 text-xs text-gray-500">职责</div>
+            <Input
+              v-model:value="row.duty"
+              placeholder="请输入职责"
             />
           </div>
           <div class="mb-2">

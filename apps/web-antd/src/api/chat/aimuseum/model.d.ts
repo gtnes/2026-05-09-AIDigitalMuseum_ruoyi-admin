@@ -35,6 +35,11 @@ export interface AimuseumAppVO {
   description?: string;
 
   /**
+   * 职责
+   */
+  duty?: string;
+
+  /**
    * 展示排序
    */
   sort?: number;
@@ -142,6 +147,11 @@ export interface AimuseumAppForm {
    * 说明
    */
   description?: string;
+
+  /**
+   * 职责
+   */
+  duty?: string;
 
   /**
    * 展示排序
