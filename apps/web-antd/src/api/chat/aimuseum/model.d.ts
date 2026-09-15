@@ -35,6 +35,11 @@ export interface AimuseumAppVO {
   description?: string;
 
   /**
+   * AI语音音色档案id（voice_profile.id，空=不自动播报）
+   */
+  voiceProfileId?: string | number;
+
+  /**
    * 职责
    */
   duty?: string;
@@ -147,6 +152,11 @@ export interface AimuseumAppForm {
    * 说明
    */
   description?: string;
+
+  /**
+   * AI语音音色档案id（voice_profile.id，空=不自动播报）
+   */
+  voiceProfileId?: string | number;
 
   /**
    * 职责

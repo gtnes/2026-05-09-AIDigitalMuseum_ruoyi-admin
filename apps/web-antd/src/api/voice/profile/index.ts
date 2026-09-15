@@ -77,3 +77,10 @@ export function voicePlatformOptions() {
     '/voice/tts/platformOptions',
   );
 }
+
+/**
+ * 启用中的AI语音音色选项（博物馆智能体配置AI语音等场景）
+ */
+export function voiceProfileVoices() {
+  return requestClient.get<VoiceProfileVO[]>('/voice/tts/voices');
+}

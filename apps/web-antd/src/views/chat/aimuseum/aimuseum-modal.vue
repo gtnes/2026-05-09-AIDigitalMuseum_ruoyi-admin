@@ -12,8 +12,9 @@ import { Input, InputNumber, message, Select, Textarea } from 'ant-design-vue';
 import dayjs from 'dayjs';
 
 import { useVbenForm } from '#/adapter/form';
-import { chatappAppList } from '#/api/chat/chatapp';
 import { aimuseumAdd, aimuseumInfo, aimuseumUpdate } from '#/api/chat/aimuseum';
+import { chatappAppList } from '#/api/chat/chatapp';
+import { voiceProfileVoices } from '#/api/voice/profile';
 import { ImageUpload } from '#/components/upload';
 
 import { modalSchema } from './data';
@@ -26,7 +27,10 @@ const title = computed(() => {
 });
 
 /** 智能体下拉选项 */
-const appOptions = ref<{ label: string; value: string | number }[]>([]);
+const appOptions = ref<{ label: string; value: number | string }[]>([]);
+
+/** AI语音音色下拉选项（启用中的音色档案） */
+const voiceOptions = ref<{ label: string; value: number | string }[]>([]);
 
 /** 智能体配置列表（子表） */
 const chatappRows = reactive<Array<AimuseumAppForm>>([]);
@@ -39,6 +43,7 @@ function addAppRow() {
     talkingGifUrl: '',
     description: '',
     duty: '',
+    voiceProfileId: undefined,
     sort: chatappRows.length + 1,
   });
 }
@@ -54,6 +59,19 @@ async function loadAppOptions() {
   const list = await chatappAppList();
   appOptions.value = list.map((item) => ({
     label: item.appName,
+    value: item.id,
+  }));
+}
+
+async function loadVoiceOptions() {
+  if (voiceOptions.value.length > 0) {
+    return;
+  }
+  const list = await voiceProfileVoices();
+  voiceOptions.value = list.map((item) => ({
+    label: item.platformName
+      ? `${item.voiceName}（${item.platformName}）`
+      : item.voiceName,
     value: item.id,
   }));
 }
@@ -105,6 +123,9 @@ const [BasicModal, modalApi] = useVbenModal({
     modalApi.modalLoading(true);
 
     await loadAppOptions();
+    loadVoiceOptions().catch((error) => {
+      console.error('加载AI语音选项失败:', error);
+    });
 
     const { id } = modalApi.getData() as { id?: number | string };
     isUpdate.value = !!id;
@@ -133,6 +154,7 @@ const [BasicModal, modalApi] = useVbenModal({
           talkingGifUrl: item.talkingGifUrl,
           description: item.description,
           duty: item.duty,
+          voiceProfileId: item.voiceProfileId,
           sort: item.sort,
         })),
       );
@@ -245,7 +267,7 @@ async function handleCancel() {
             删除
           </a-button>
         </div>
-        <div class="grid grid-cols-3 gap-x-4">
+        <div class="grid grid-cols-2 gap-x-4">
           <div class="mb-2">
             <div class="mb-1 text-xs text-gray-500">
               <span class="text-red-500">*</span> 智能体
@@ -264,6 +286,20 @@ async function handleCancel() {
             <Input
               v-model:value="row.duty"
               placeholder="请输入职责"
+            />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-x-4">
+          <div class="mb-2">
+            <div class="mb-1 text-xs text-gray-500">AI语音</div>
+            <Select
+              v-model:value="row.voiceProfileId"
+              :options="voiceOptions"
+              placeholder="请选择AI语音（可选，用于自动播报）"
+              allow-clear
+              show-search
+              option-filter-prop="label"
+              class="w-full"
             />
           </div>
           <div class="mb-2">
