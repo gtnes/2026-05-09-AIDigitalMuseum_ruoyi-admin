@@ -35,9 +35,19 @@ export interface AimuseumAppVO {
   description?: string;
 
   /**
-   * AI语音音色档案id（voice_profile.id，空=不自动播报）
+   * AI语音音色档案id（voice_profile.id，空=不播报）
    */
   voiceProfileId?: string | number;
+
+  /**
+   * 语音开关（关闭时C端不显示播报按钮、不调用语音合成接口）
+   */
+  voiceEnabled?: boolean;
+
+  /**
+   * 语音自动播报（开启时C端回复完成自动朗读）
+   */
+  voiceAutoPlay?: boolean;
 
   /**
    * 职责
@@ -154,9 +164,19 @@ export interface AimuseumAppForm {
   description?: string;
 
   /**
-   * AI语音音色档案id（voice_profile.id，空=不自动播报）
+   * AI语音音色档案id（voice_profile.id，空=不播报）
    */
   voiceProfileId?: string | number;
+
+  /**
+   * 语音开关（关闭时C端不显示播报按钮、不调用语音合成接口）
+   */
+  voiceEnabled?: boolean;
+
+  /**
+   * 语音自动播报（开启时C端回复完成自动朗读）
+   */
+  voiceAutoPlay?: boolean;
 
   /**
    * 职责

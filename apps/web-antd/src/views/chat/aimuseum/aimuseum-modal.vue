@@ -8,7 +8,14 @@ import { $t } from '@vben/locales';
 import { cloneDeep } from '@vben/utils';
 
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons-vue';
-import { Input, InputNumber, message, Select, Textarea } from 'ant-design-vue';
+import {
+  Input,
+  InputNumber,
+  message,
+  Select,
+  Switch,
+  Textarea,
+} from 'ant-design-vue';
 import dayjs from 'dayjs';
 
 import { useVbenForm } from '#/adapter/form';
@@ -44,6 +51,9 @@ function addAppRow() {
     description: '',
     duty: '',
     voiceProfileId: undefined,
+    // 选了音色默认启用语音，自动播报默认关（打扰性行为需显式开启）
+    voiceEnabled: true,
+    voiceAutoPlay: false,
     sort: chatappRows.length + 1,
   });
 }
@@ -51,6 +61,14 @@ function addAppRow() {
 function removeAppRow(index: number) {
   chatappRows.splice(index, 1);
 }
+
+/** 智能体块循环配色（蓝/绿/紫/橙），相邻智能体用不同底色便于区分 */
+const rowThemes = [
+  'border-blue-200 bg-blue-50/60 dark:border-blue-800/60 dark:bg-blue-950/20',
+  'border-green-200 bg-green-50/60 dark:border-green-800/60 dark:bg-green-950/20',
+  'border-purple-200 bg-purple-50/60 dark:border-purple-800/60 dark:bg-purple-950/20',
+  'border-orange-200 bg-orange-50/60 dark:border-orange-800/60 dark:bg-orange-950/20',
+];
 
 async function loadAppOptions() {
   if (appOptions.value.length > 0) {
@@ -101,7 +119,7 @@ const [BasicForm, formApi] = useVbenForm({
     // 通用配置项 会影响到所有表单项
     componentProps: {
       class: 'w-full',
-    }
+    },
   },
   schema: modalSchema(),
   showDefaultActions: false,
@@ -155,6 +173,9 @@ const [BasicModal, modalApi] = useVbenModal({
           description: item.description,
           duty: item.duty,
           voiceProfileId: item.voiceProfileId,
+          // 旧数据无语音开关字段（null），视为开启保持原行为
+          voiceEnabled: item.voiceEnabled ?? true,
+          voiceAutoPlay: item.voiceAutoPlay ?? false,
           sort: item.sort,
         })),
       );
@@ -175,7 +196,9 @@ function toDateText(value: any): string | undefined {
     // 13位毫秒时间戳，其余按秒处理
     return dayjs(n > 1e12 ? n : n * 1000).format('YYYY-MM-DD HH:mm:ss');
   }
-  return dayjs(str).isValid() ? dayjs(str).format('YYYY-MM-DD HH:mm:ss') : undefined;
+  return dayjs(str).isValid()
+    ? dayjs(str).format('YYYY-MM-DD HH:mm:ss')
+    : undefined;
 }
 
 /** DatePicker值 -> 秒级时间戳（兼容dayjs实例/日期字符串/时间戳字符串） */
@@ -254,20 +277,27 @@ async function handleCancel() {
       <div
         v-for="(row, index) in chatappRows"
         :key="index"
-        class="mb-3 rounded border border-gray-200 p-3 dark:border-gray-700"
+        class="mb-3 rounded border p-3"
+        :class="rowThemes[index % rowThemes.length]"
       >
         <div class="mb-2 flex items-center justify-between">
           <span class="text-xs font-medium text-gray-500">
             智能体 {{ index + 1 }}
           </span>
-          <a-button danger size="small" type="text" @click="removeAppRow(index)">
+          <a-button
+            danger
+            size="small"
+            type="text"
+            @click="removeAppRow(index)"
+          >
             <template #icon>
               <DeleteOutlined />
             </template>
             删除
           </a-button>
         </div>
-        <div class="grid grid-cols-2 gap-x-4">
+        <!-- 第一行三列：智能体 / 职责 / 展示排序 -->
+        <div class="grid grid-cols-3 gap-x-4">
           <div class="mb-2">
             <div class="mb-1 text-xs text-gray-500">
               <span class="text-red-500">*</span> 智能体
@@ -283,24 +313,7 @@ async function handleCancel() {
           </div>
           <div class="mb-2">
             <div class="mb-1 text-xs text-gray-500">职责</div>
-            <Input
-              v-model:value="row.duty"
-              placeholder="请输入职责"
-            />
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-x-4">
-          <div class="mb-2">
-            <div class="mb-1 text-xs text-gray-500">AI语音</div>
-            <Select
-              v-model:value="row.voiceProfileId"
-              :options="voiceOptions"
-              placeholder="请选择AI语音（可选，用于自动播报）"
-              allow-clear
-              show-search
-              option-filter-prop="label"
-              class="w-full"
-            />
+            <Input v-model:value="row.duty" placeholder="请输入职责" />
           </div>
           <div class="mb-2">
             <div class="mb-1 text-xs text-gray-500">展示排序</div>
@@ -312,10 +325,55 @@ async function handleCancel() {
             />
           </div>
         </div>
+        <!-- 第二行三列：AI语音 / 语音开关 / 语音自动播报 -->
+        <div class="grid grid-cols-3 gap-x-4">
+          <div class="mb-2">
+            <div class="mb-1 text-xs text-gray-500">AI语音</div>
+            <Select
+              v-model:value="row.voiceProfileId"
+              :options="voiceOptions"
+              placeholder="请选择AI语音（可选）"
+              allow-clear
+              show-search
+              option-filter-prop="label"
+              class="w-full"
+            />
+          </div>
+          <div class="mb-2">
+            <div class="mb-1 text-xs text-gray-500">
+              AI语音开关
+              <span class="text-gray-400">（关闭后不显示播报）</span>
+            </div>
+            <div class="flex h-[32px] items-center">
+              <Switch
+                v-model:checked="row.voiceEnabled"
+                checked-children="开"
+                un-checked-children="关"
+              />
+            </div>
+          </div>
+          <div class="mb-2">
+            <div class="mb-1 text-xs text-gray-500">
+              语音自动播报
+              <span class="text-gray-400">（回复完成自动朗读）</span>
+            </div>
+            <div class="flex h-[32px] items-center">
+              <Switch
+                v-model:checked="row.voiceAutoPlay"
+                checked-children="开"
+                un-checked-children="关"
+              />
+            </div>
+          </div>
+        </div>
         <div class="grid grid-cols-3 gap-x-4">
           <div class="mb-2">
             <div class="mb-1 text-xs text-gray-500">背景图片</div>
-            <ImageUpload v-model:value="row.bgUrl" :max-count="1" help-message />
+            <ImageUpload
+              v-model:value="row.bgUrl"
+              :max-count="1"
+              help-message
+            />
           </div>
           <div class="mb-2">
             <div class="mb-1 text-xs text-gray-500">待机形象（图片/GIF）</div>
