@@ -72,6 +72,11 @@ export interface VoiceProfileVO {
   sampleText: string;
 
   /**
+   * 计费单价（元/万字符，空=不计费）
+   */
+  pricePer10k?: number;
+
+  /**
    * 状态(0正常 1停用)
    */
   status: string;
@@ -132,6 +137,11 @@ export interface VoiceProfileForm extends BaseEntity {
    * 试听文本
    */
   sampleText?: string;
+
+  /**
+   * 计费单价（元/万字符，空=不计费）
+   */
+  pricePer10k?: number;
 
   /**
    * 状态(0正常 1停用)

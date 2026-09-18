@@ -215,5 +215,34 @@ export const modalSchema: FormSchemaGetter = () => [
       // resultField: 'url', // 上传成功后返回的字段名，默认 'url'，可选: 'ossId' | 'url' | 'fileName'
     },
   },
+  {
+    // 与输出token单价同行
+    label: '输入token单价(元/千token)',
+    // 标签较长，单独放宽该项label宽度避免换行
+    labelWidth: 170,
+    fieldName: 'priceInPer1k',
+    component: 'InputNumber',
+    componentProps: {
+      min: 0,
+      precision: 6,
+      placeholder: '留空不计费',
+      class: 'w-full',
+    },
+    help: '博物馆对话用量计费依据，留空不计费',
+  },
+  {
+    // 与输入token单价同行
+    label: '输出token单价(元/千token)',
+    labelWidth: 170,
+    fieldName: 'priceOutPer1k',
+    component: 'InputNumber',
+    componentProps: {
+      min: 0,
+      precision: 6,
+      placeholder: '留空不计费',
+      class: 'w-full',
+    },
+    help: '博物馆对话用量计费依据，留空不计费',
+  },
   // 预设问题在 modal 中渲染，不放进表单 schema
 ];

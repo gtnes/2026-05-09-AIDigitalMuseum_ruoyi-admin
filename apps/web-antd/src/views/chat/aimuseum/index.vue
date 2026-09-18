@@ -1,21 +1,24 @@
 <script setup lang="ts">
-import { Page, useVbenModal, type VbenFormProps } from '@vben/common-ui';
+import type { VbenFormProps } from '@vben/common-ui';
+
+import type { VxeGridProps } from '#/adapter/vxe-table';
+import type { AimuseumForm } from '#/api/chat/aimuseum/model';
+
+import { Page, useVbenModal } from '@vben/common-ui';
 import { getVxePopupContainer } from '@vben/utils';
 
 import { Modal, Popconfirm, Space } from 'ant-design-vue';
 
-import { useVbenVxeGrid, vxeCheckboxChecked, type VxeGridProps } from '#/adapter/vxe-table';
-
+import { useVbenVxeGrid, vxeCheckboxChecked } from '#/adapter/vxe-table';
 import {
   aimuseumExport,
   aimuseumList,
   aimuseumRemove,
 } from '#/api/chat/aimuseum';
-import type { AimuseumForm } from '#/api/chat/aimuseum/model';
 import { commonDownloadExcel } from '#/utils/file/download';
 
-import { columns, querySchema } from './data';
 import aimuseumModal from './aimuseum-modal.vue';
+import { columns, querySchema } from './data';
 
 const formOptions: VbenFormProps = {
   commonConfig: {
@@ -56,7 +59,7 @@ const gridOptions: VxeGridProps = {
     keyField: 'id',
   },
   // 表格全局唯一标识，用于保存列配置
-  id: 'chat-aimuseum-index'
+  id: 'chat-aimuseum-index',
 };
 
 const [BasicTable, tableApi] = useVbenVxeGrid({
@@ -98,9 +101,14 @@ function handleMultiDelete() {
 }
 
 function handleDownloadExcel() {
-  commonDownloadExcel(aimuseumExport, 'AI博物馆数据', tableApi.formApi.form.values, {
-    fieldMappingTime: formOptions.fieldMappingTime,
-  });
+  commonDownloadExcel(
+    aimuseumExport,
+    'AI博物馆数据',
+    tableApi.formApi.form.values,
+    {
+      fieldMappingTime: formOptions.fieldMappingTime,
+    },
+  );
 }
 </script>
 
@@ -120,7 +128,8 @@ function handleDownloadExcel() {
             danger
             type="primary"
             v-access:code="['system:aimuseum:remove']"
-            @click="handleMultiDelete">
+            @click="handleMultiDelete"
+          >
             {{ $t('pages.common.delete') }}
           </a-button>
           <a-button

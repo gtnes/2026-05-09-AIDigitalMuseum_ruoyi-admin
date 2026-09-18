@@ -1,10 +1,10 @@
-import type { PageQuery, BaseEntity } from '#/api/common';
+import type { BaseEntity, PageQuery } from '#/api/common';
 
 export interface ChatappVO {
   /**
    * 主键
    */
-  id: string | number;
+  id: number | string;
 
   /**
    * 应用名称
@@ -19,7 +19,17 @@ export interface ChatappVO {
   /**
    * 服务商编码（dashscope dify coze）
    */
-  providerCode: string | number;
+  providerCode: number | string;
+
+  /**
+   * 输入token单价（元/千token，空=不计费）
+   */
+  priceInPer1k?: number;
+
+  /**
+   * 输出token单价（元/千token，空=不计费）
+   */
+  priceOutPer1k?: number;
 
   /**
    * 应用描述
@@ -50,14 +60,13 @@ export interface ChatappVO {
    * 备注
    */
   remark: string;
-
 }
 
 export interface ChatappForm extends BaseEntity {
   /**
    * 主键
    */
-  id?: string | number;
+  id?: number | string;
 
   /**
    * 应用名称
@@ -72,7 +81,7 @@ export interface ChatappForm extends BaseEntity {
   /**
    * 服务商编码（dashscope dify coze）
    */
-  providerCode?: string | number;
+  providerCode?: number | string;
 
   /**
    * 请求地址
@@ -83,6 +92,16 @@ export interface ChatappForm extends BaseEntity {
    * 密钥
    */
   apiKey?: string;
+
+  /**
+   * 输入token单价（元/千token，空=不计费）
+   */
+  priceInPer1k?: number;
+
+  /**
+   * 输出token单价（元/千token，空=不计费）
+   */
+  priceOutPer1k?: number;
 
   /**
    * 应用描述
@@ -113,7 +132,6 @@ export interface ChatappForm extends BaseEntity {
    * 备注
    */
   remark?: string;
-
 }
 
 export interface ChatappQuery extends PageQuery {
@@ -130,7 +148,7 @@ export interface ChatappQuery extends PageQuery {
   /**
    * 服务商编码（dashscope dify coze）
    */
-  providerCode?: string | number;
+  providerCode?: number | string;
 
   /**
    * 状态（0正常 1停用）
@@ -138,7 +156,7 @@ export interface ChatappQuery extends PageQuery {
   status?: string;
 
   /**
-    * 日期范围参数
-    */
+   * 日期范围参数
+   */
   params?: any;
 }

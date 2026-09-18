@@ -27,16 +27,16 @@ import {
 import { pick } from 'lodash-es';
 
 import { modelList } from '#/api/chat/model';
-import { ImageUpload } from '#/components/upload';
 import { platformVoiceOptions } from '#/api/voice/platform';
-import { getDictOptions } from '#/utils/dict';
 import {
+  voicePlatformOptions,
   voiceProfileAdd,
   voiceProfileInfo,
   voiceProfileUpdate,
-  voicePlatformOptions,
   voiceTtsPreview,
 } from '#/api/voice/profile';
+import { ImageUpload } from '#/components/upload';
+import { getDictOptions } from '#/utils/dict';
 
 const emit = defineEmits<{ reload: [] }>();
 
@@ -67,6 +67,7 @@ const defaultValues: Partial<VoiceProfileForm> = {
   pitch: 1,
   volume: 50,
   sampleText: '你好，我是智能语音助手，很高兴为你服务。',
+  pricePer10k: undefined,
   status: '0',
   sort: 0,
   remark: undefined,
@@ -269,8 +270,8 @@ async function handlePreview() {
       previewPlaying.value = false;
       audio = null;
     };
-    audio.onended = done;
-    audio.onerror = done;
+    audio.addEventListener('ended', done);
+    audio.addEventListener('error', done);
     await audio.play();
   } catch (error) {
     console.error('试听失败:', error);
@@ -287,10 +288,7 @@ async function handlePreview() {
       <Row :gutter="16">
         <Col :span="8">
           <FormItem label="音色名称" v-bind="validateInfos.voiceName">
-            <Input
-              v-model:value="formData.voiceName"
-              placeholder="如 西西"
-            />
+            <Input v-model:value="formData.voiceName" placeholder="如 西西" />
           </FormItem>
         </Col>
         <Col :span="8">
@@ -306,17 +304,20 @@ async function handlePreview() {
           <FormItem label="平台音色" v-bind="validateInfos.platformVoiceId">
             <Select
               v-model:value="formData.platformVoiceId"
-              :options="voiceOptions.map((v) => ({ label: v.voiceName, value: v.id, description: v.description }))"
+              :options="
+                voiceOptions.map((v) => ({
+                  label: v.voiceName,
+                  value: v.id,
+                  description: v.description,
+                }))
+              "
               placeholder="选择该平台音色"
               show-search
               option-filter-prop="label"
             >
               <template #option="{ label, description }">
                 <span>{{ label }}</span>
-                <span
-                  v-if="description"
-                  class="ml-1 text-xs text-gray-400"
-                >
+                <span v-if="description" class="ml-1 text-xs text-gray-400">
                   {{ description }}
                 </span>
               </template>
@@ -396,6 +397,24 @@ async function handlePreview() {
               :max="100"
               :min="0"
               :step="1"
+            />
+          </FormItem>
+        </Col>
+      </Row>
+
+      <Row :gutter="16">
+        <Col :span="8">
+          <FormItem
+            label="计费单价(元/万字符)"
+            v-bind="validateInfos.pricePer10k"
+            extra="博物馆语音用量计费依据，留空不计费"
+          >
+            <InputNumber
+              v-model:value="formData.pricePer10k"
+              :min="0"
+              :precision="4"
+              class="w-full"
+              placeholder="留空不计费"
             />
           </FormItem>
         </Col>
