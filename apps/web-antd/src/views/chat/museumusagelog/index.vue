@@ -2,14 +2,22 @@
 import type { VbenFormProps } from '@vben/common-ui';
 
 import type { VxeGridProps } from '#/adapter/vxe-table';
+import type { PageQuery } from '#/api/common';
 
 import { onMounted } from 'vue';
 
 import { Page } from '@vben/common-ui';
+import { $t } from '@vben/locales';
+
+import { Space } from 'ant-design-vue';
 
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import { aimuseumList } from '#/api/chat/aimuseum';
-import { museumUsageSummary } from '#/api/chat/museumusage';
+import {
+  museumUsageLogExport,
+  museumUsageLogList,
+} from '#/api/chat/museumusagelog';
+import { commonDownloadExcel } from '#/utils/file/download';
 
 /** 业务类型选项（不选=全部） */
 const bizTypeOptions = [
@@ -49,83 +57,70 @@ const formOptions: VbenFormProps = {
       componentProps: {
         valueFormat: 'YYYY-MM-DD',
       },
-      fieldName: 'dateRange',
-      label: '统计日期',
+      fieldName: 'createTime',
+      label: '调用时间',
     },
   ],
   wrapperClass: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
+  // 日期选择格式化
+  fieldMappingTime: [
+    [
+      'createTime',
+      ['params[beginTime]', 'params[endTime]'],
+      ['YYYY-MM-DD 00:00:00', 'YYYY-MM-DD 23:59:59'],
+    ],
+  ],
 };
 
 const columns: VxeGridProps['columns'] = [
-  { title: '博物馆', field: 'museumTitle' },
-  { title: '业务类型', field: 'bizType', slots: { default: 'bizType' } },
-  { title: '调用次数', field: 'calls', width: 110 },
-  { title: '字符总量', field: 'chars', width: 110 },
+  { field: 'museumTitle', title: '博物馆', minWidth: 160 },
   {
-    title: '输入token',
-    field: 'tokensIn',
-    slots: { default: 'tokensIn' },
-    width: 120,
+    field: 'bizType',
+    title: '业务类型',
+    slots: { default: 'bizType' },
+    width: 100,
   },
   {
-    title: '输出token',
-    field: 'tokensOut',
-    slots: { default: 'tokensOut' },
-    width: 120,
+    field: 'appName',
+    title: '智能体名称',
+    slots: { default: 'appName' },
+    minWidth: 160,
   },
-  { title: '费用(元)', field: 'cost', width: 120 },
+  {
+    field: 'voiceName',
+    title: '音色名称',
+    slots: { default: 'voiceName' },
+    minWidth: 160,
+  },
+  { field: 'chars', title: '字符数', width: 100 },
+  { field: 'tokensIn', title: '输入token', width: 110 },
+  { field: 'tokensOut', title: '输出token', width: 110 },
+  { field: 'cost', title: '费用(元)', width: 110 },
+  { field: 'createTime', title: '调用时间', width: 170 },
 ];
-
-/** 表尾合计行：对数值列求和 */
-const footerMethod: VxeGridProps['footerMethod'] = ({ columns, data }) => {
-  const sumFields = new Set([
-    'calls',
-    'chars',
-    'cost',
-    'tokensIn',
-    'tokensOut',
-  ]);
-  return [
-    columns.map((column, columnIndex) => {
-      if (columnIndex === 0) {
-        return '总计';
-      }
-      const field = column.field;
-      if (field && sumFields.has(field)) {
-        const sum = data.reduce(
-          (total, row) => total + (Number(row[field]) || 0),
-          0,
-        );
-        return field === 'cost' ? sum.toFixed(2) : String(sum);
-      }
-      return '';
-    }),
-  ];
-};
 
 const gridOptions: VxeGridProps = {
   columns,
   height: 'auto',
-  // 汇总数据量小（博物馆数×业务类型），不分页
-  pagerConfig: { enabled: false },
-  showFooter: true,
-  footerMethod,
+  keepSource: true,
+  pagerConfig: {},
   proxyConfig: {
     ajax: {
-      query: async (_, formValues = {}) => {
-        // dateRange -> beginTime/endTime（YYYY-MM-DD，含当天）
-        const { dateRange, ...rest } = formValues;
-        const data = await museumUsageSummary({
-          ...rest,
-          beginTime: dateRange?.[0],
-          endTime: dateRange?.[1],
-        });
-        return { rows: data, total: data.length };
+      query: async ({ page }, formValues = {}) => {
+        const params: PageQuery = {
+          pageNum: page.currentPage,
+          pageSize: page.pageSize,
+          ...formValues,
+        };
+        return await museumUsageLogList(params);
       },
     },
   },
+  rowConfig: {
+    keyField: 'id',
+  },
   // 表格全局唯一标识，用于保存列配置
-  id: 'chat-museumusage-index',
+  id: 'chat-museumusagelog-index',
 };
 
 const [BasicTable, tableApi] = useVbenVxeGrid({
@@ -148,19 +143,40 @@ onMounted(async () => {
     console.error('加载博物馆选项失败:', error);
   }
 });
+
+function handleDownloadExcel() {
+  commonDownloadExcel(
+    museumUsageLogExport,
+    'AI博物馆调用记录',
+    tableApi.formApi.form.values,
+    {
+      fieldMappingTime: formOptions.fieldMappingTime,
+    },
+  );
+}
 </script>
 
 <template>
   <Page :auto-content-height="true">
-    <BasicTable table-title="博物馆用量统计">
+    <BasicTable table-title="AI博物馆调用记录列表">
+      <template #toolbar-tools>
+        <Space>
+          <a-button
+            v-access:code="['system:museumUsage:export']"
+            @click="handleDownloadExcel"
+          >
+            {{ $t('pages.common.export') }}
+          </a-button>
+        </Space>
+      </template>
       <template #bizType="{ row }">
         {{ row.bizType === 'chat' ? '对话' : '语音合成' }}
       </template>
-      <template #tokensIn="{ row }">
-        {{ row.bizType === 'chat' ? row.tokensIn : '-' }}
+      <template #appName="{ row }">
+        {{ row.appName || '-' }}
       </template>
-      <template #tokensOut="{ row }">
-        {{ row.bizType === 'chat' ? row.tokensOut : '-' }}
+      <template #voiceName="{ row }">
+        {{ row.voiceName || '-' }}
       </template>
     </BasicTable>
   </Page>
