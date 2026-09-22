@@ -6,7 +6,7 @@ import { onMounted, ref } from 'vue';
 import { Page, useVbenModal, type VbenFormProps } from '@vben/common-ui';
 import { getVxePopupContainer } from '@vben/utils';
 
-import { Image, Modal, Popconfirm, Space } from 'ant-design-vue';
+import { Image, message, Modal, Popconfirm, Space } from 'ant-design-vue';
 
 import {
   useVbenVxeGrid,
@@ -162,10 +162,38 @@ function handleMultiDelete() {
   });
 }
 
-function handlePreview(row: Recordable<any>) {
-  previewUrl.value = resolveUrl(row.videoUrl);
+async function handlePreview(row: Recordable<any>) {
   previewTitle.value = row.title;
+  previewUrl.value = '';
   previewVisible.value = true;
+
+  const value = row.videoUrl;
+  if (!value) {
+    return;
+  }
+  // 历史数据：库中直接存URL（签名已过期，只能尝试播放并靠错误提示引导重新上传）
+  if (value.startsWith('http')) {
+    previewUrl.value = value;
+    return;
+  }
+  // ossId：点击时实时换取新的签名URL（列表缓存的URL有120秒有效期，可能已过期）
+  try {
+    const list = await ossInfo(value);
+    if (list && list.length > 0) {
+      const url = list[0]!.url;
+      ossUrlMap.value[String(value)] = url;
+      previewUrl.value = url;
+    } else {
+      message.warning('未找到视频文件，请重新编辑上传');
+    }
+  } catch (error) {
+    console.error('获取视频地址失败:', error);
+    message.error('获取视频地址失败，请检查账号是否具有系统文件查询权限');
+  }
+}
+
+function handleVideoError() {
+  message.error('视频加载失败，地址可能已过期，请编辑该记录重新上传视频文件');
 }
 
 function handlePreviewClose() {
@@ -261,7 +289,14 @@ function handleDownloadExcel() {
         controls
         autoplay
         class="w-full"
+        @error="handleVideoError"
       />
+      <div
+        v-else
+        class="flex h-48 items-center justify-center text-gray-400"
+      >
+        视频地址获取中...
+      </div>
     </Modal>
   </Page>
 </template>
