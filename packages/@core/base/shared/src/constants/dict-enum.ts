@@ -15,6 +15,7 @@ export const DictEnum = {
   WF_TASK_STATUS: 'wf_task_status', // 任务状态
   SYS_MODEL_BILLING: 'sys_model_billing', // 计费方式
   CHAT_MODEL_CATEGORY: 'chat_model_category', // 模型分类
+  AI_VIDEO_SHOW_CATEGORY: 'ai_video_show_category', // AI视频展示类别
 } as const;
 
 export type DictEnumKey = keyof typeof DictEnum;
