@@ -20,6 +20,7 @@ import {
   aiVideoList,
   aiVideoRemove,
 } from '#/api/video/video';
+import { ossInfo } from '#/api/system/oss';
 import { commonDownloadExcel } from '#/utils/file/download';
 
 import videoModal from './video-modal.vue';
@@ -48,11 +49,13 @@ const gridOptions: VxeGridProps = {
   proxyConfig: {
     ajax: {
       query: async ({ page }, formValues = {}) => {
-        return await aiVideoList({
+        const res = await aiVideoList({
           pageNum: page.currentPage,
           pageSize: page.pageSize,
           ...formValues,
         });
+        await loadOssUrls(res.rows ?? []);
+        return res;
       },
     },
   },
@@ -75,6 +78,41 @@ const [VideoModal, modalApi] = useVbenModal({
 const previewVisible = ref(false);
 const previewUrl = ref('');
 const previewTitle = ref('');
+
+// ossId → 可访问URL映射：库里只存ossId编号，显示时实时换取带签名的临时URL
+const ossUrlMap = ref<Record<string, string>>({});
+
+function resolveUrl(value?: string) {
+  if (!value) {
+    return '';
+  }
+  // 兼容历史数据中直接存URL的记录
+  return value.startsWith('http') ? value : (ossUrlMap.value[value] ?? '');
+}
+
+async function loadOssUrls(rows: Recordable<any>[]) {
+  const ids = [
+    ...new Set(
+      rows
+        .flatMap((row) => [row.coverUrl, row.videoUrl])
+        .filter(
+          (v): v is string =>
+            !!v && !v.startsWith('http') && !ossUrlMap.value[v],
+        ),
+    ),
+  ];
+  if (ids.length === 0) {
+    return;
+  }
+  try {
+    const list = await ossInfo(ids.join(','));
+    for (const item of list) {
+      ossUrlMap.value[String(item.ossId)] = item.url;
+    }
+  } catch (error) {
+    console.error('获取文件访问地址失败:', error);
+  }
+}
 
 onMounted(async () => {
   try {
@@ -125,7 +163,7 @@ function handleMultiDelete() {
 }
 
 function handlePreview(row: Recordable<any>) {
-  previewUrl.value = row.videoUrl;
+  previewUrl.value = resolveUrl(row.videoUrl);
   previewTitle.value = row.title;
   previewVisible.value = true;
 }
@@ -171,7 +209,7 @@ function handleDownloadExcel() {
       </template>
       <template #cover="{ row }">
         <Image
-          :src="row.coverUrl"
+          :src="resolveUrl(row.coverUrl)"
           :width="72"
           :height="42"
           fallback="/favicon.ico"

@@ -91,15 +91,18 @@ const defaultValues: Partial<AiVideoForm> = {
 
 const formData = ref(defaultValues);
 
-// 上传组件绑定值用于回显（支持URL直接传入），表单存完整URL
+// 上传组件绑定值用于回显（ossId或历史URL均可，hook自动识别）
 const coverValue = ref<string>('');
 const videoValue = ref<string>('');
 
 /** 视频上传允许的格式 */
 const videoAcceptExts = ['.mp4', '.webm', '.ogg', '.mov', '.m4v'];
 
+// 上传成功只存 ossId（与智能体应用管理 appShow 一致）：
+// 签名URL有效期仅120秒，落库后很快失效；显示时由ossId实时换取新URL。
+// hook上传成功后给coverValue/videoValue写入ossId，此处同步到表单字段。
 function handleCoverSuccess(_file: any, res: UploadResult) {
-  formData.value.coverUrl = res.url;
+  formData.value.coverUrl = String(res.ossId);
 }
 
 function handleCoverRemove() {
@@ -107,7 +110,7 @@ function handleCoverRemove() {
 }
 
 function handleVideoSuccess(_file: any, res: UploadResult) {
-  formData.value.videoUrl = res.url;
+  formData.value.videoUrl = String(res.ossId);
 }
 
 function handleVideoRemove() {
@@ -220,7 +223,7 @@ async function handleCancel() {
             />
           </FormItem>
         </Col>
-        <Col :span="5">
+        <Col :span="6">
           <FormItem label="所属分类" v-bind="validateInfos.categoryId">
             <Select
               v-model:value="formData.categoryId"
@@ -237,7 +240,7 @@ async function handleCancel() {
             />
           </FormItem>
         </Col>
-        <Col :span="5">
+        <Col :span="6">
           <FormItem
             label="展示类别"
             v-bind="validateInfos.showCategory"
@@ -251,7 +254,7 @@ async function handleCancel() {
             />
           </FormItem>
         </Col>
-        <Col :span="3">
+        <Col :span="4">
           <FormItem label="状态" v-bind="validateInfos.status">
             <RadioGroup
               v-model:value="formData.status"
@@ -264,7 +267,10 @@ async function handleCancel() {
             />
           </FormItem>
         </Col>
-        <Col :span="3">
+      </Row>
+
+      <Row :gutter="16">
+        <Col :span="8">
           <FormItem label="排序" v-bind="validateInfos.sort">
             <InputNumber
               v-model:value="formData.sort"
@@ -273,10 +279,7 @@ async function handleCancel() {
             />
           </FormItem>
         </Col>
-      </Row>
-
-      <Row :gutter="16">
-        <Col :span="6">
+        <Col :span="8">
           <FormItem label="封面图片" v-bind="validateInfos.coverUrl">
             <ImageUpload
               v-model:value="coverValue"
@@ -286,7 +289,7 @@ async function handleCancel() {
             />
           </FormItem>
         </Col>
-        <Col :span="18">
+        <Col :span="8">
           <FormItem label="视频文件" v-bind="validateInfos.videoUrl">
             <FileUpload
               v-model:value="videoValue"
