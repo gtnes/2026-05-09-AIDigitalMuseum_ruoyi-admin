@@ -7,7 +7,7 @@ export interface AimuseumAppVO {
   /**
    * chatapp中的id（即appId，与chat_app.id对应）
    */
-  id: string | number;
+  id: number | string;
 
   /**
    * 应用名称（来自chatapp，不可修改）
@@ -37,7 +37,7 @@ export interface AimuseumAppVO {
   /**
    * AI语音音色档案id（voice_profile.id，空=不播报）
    */
-  voiceProfileId?: string | number;
+  voiceProfileId?: number | string;
 
   /**
    * 语音开关（关闭时C端不显示播报按钮、不调用语音合成接口）
@@ -64,7 +64,7 @@ export interface AimuseumVO {
   /**
    * 主键
    */
-  id: string | number;
+  id: number | string;
 
   /**
    * 实例状态（1正常 0停用）
@@ -127,6 +127,21 @@ export interface AimuseumVO {
   vrUrl: string;
 
   /**
+   * 是否开启AI视频（0关闭 1开启）
+   */
+  videoEnable: number;
+
+  /**
+   * AI视频分类id（ai_video_category.id）
+   */
+  videoCategoryId: number | string;
+
+  /**
+   * AI视频讲解员（chatapp.id，从本博物馆智能体配置中选择）
+   */
+  videoChatappId: number | string;
+
+  /**
    * 智能体配置列表
    */
   chatapps?: AimuseumAppVO[];
@@ -141,7 +156,7 @@ export interface AimuseumAppForm {
   /**
    * chatapp中的id（即appId，与chat_app.id对应）
    */
-  id?: string | number;
+  id?: number | string;
 
   /**
    * 背景图片（ossId）
@@ -166,7 +181,7 @@ export interface AimuseumAppForm {
   /**
    * AI语音音色档案id（voice_profile.id，空=不播报）
    */
-  voiceProfileId?: string | number;
+  voiceProfileId?: number | string;
 
   /**
    * 语音开关（关闭时C端不显示播报按钮、不调用语音合成接口）
@@ -193,7 +208,7 @@ export interface AimuseumForm extends BaseEntity {
   /**
    * 主键
    */
-  id?: string | number;
+  id?: number | string;
 
   /**
    * 实例状态（1正常 0停用）
@@ -249,6 +264,21 @@ export interface AimuseumForm extends BaseEntity {
    * VR地址
    */
   vrUrl?: string;
+
+  /**
+   * 是否开启AI视频（0关闭 1开启）
+   */
+  videoEnable?: number;
+
+  /**
+   * AI视频分类id（ai_video_category.id）
+   */
+  videoCategoryId?: number | string;
+
+  /**
+   * AI视频讲解员（chatapp.id，从本博物馆智能体配置中选择）
+   */
+  videoChatappId?: number | string;
 
   /**
    * 智能体配置列表

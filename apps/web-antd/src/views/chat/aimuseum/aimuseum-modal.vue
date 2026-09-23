@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { AimuseumAppForm, AimuseumForm } from '#/api/chat/aimuseum/model';
 
-import { computed, reactive, ref } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 
 import { useVbenModal } from '@vben/common-ui';
 import { $t } from '@vben/locales';
@@ -21,6 +21,7 @@ import dayjs from 'dayjs';
 import { useVbenForm } from '#/adapter/form';
 import { aimuseumAdd, aimuseumInfo, aimuseumUpdate } from '#/api/chat/aimuseum';
 import { chatappAppList } from '#/api/chat/chatapp';
+import { videoCategoryOptions } from '#/api/video/category';
 import { voiceProfileVoices } from '#/api/voice/profile';
 import { ImageUpload } from '#/components/upload';
 
@@ -38,6 +39,9 @@ const appOptions = ref<{ label: string; value: number | string }[]>([]);
 
 /** AI语音音色下拉选项（启用中的音色档案） */
 const voiceOptions = ref<{ label: string; value: number | string }[]>([]);
+
+/** AI视频分类下拉选项（启用中的分类） */
+const videoCategoryOpts = ref<{ label: string; value: number | string }[]>([]);
 
 /** 智能体配置列表（子表） */
 const chatappRows = reactive<Array<AimuseumAppForm>>([]);
@@ -94,6 +98,34 @@ async function loadVoiceOptions() {
   }));
 }
 
+async function loadVideoCategoryOptions() {
+  if (videoCategoryOpts.value.length > 0) {
+    return;
+  }
+  const list = await videoCategoryOptions();
+  videoCategoryOpts.value = list.map((item) => ({
+    label: item.categoryName,
+    value: item.id,
+  }));
+}
+
+/** AI视频讲解员选项：来自下方"智能体配置"子表，显示"职责（应用名）" */
+const narratorOptions = computed(() =>
+  chatappRows
+    .filter((row) => !!row.id)
+    .map((row) => {
+      const appName = appOptions.value.find(
+        (o) => String(o.value) === String(row.id),
+      )?.label;
+      const duty = row.duty?.trim();
+      return {
+        label:
+          duty && appName ? `${duty}（${appName}）` : duty || appName || '',
+        value: row.id as number | string,
+      };
+    }),
+);
+
 /** 校验智能体配置列表 */
 function validateChatappRows(): boolean {
   for (const [index, row] of chatappRows.entries()) {
@@ -126,6 +158,48 @@ const [BasicForm, formApi] = useVbenForm({
   wrapperClass: 'grid-cols-2',
 });
 
+// 讲解员选项随智能体配置子表/应用列表联动，同步注入表单schema
+// （需在formApi创建之后注册，immediate先注入一次初始空选项）
+watch(
+  narratorOptions,
+  (options) => {
+    const empty = options.length === 0;
+    formApi.updateSchema([
+      {
+        fieldName: 'videoChatappId',
+        componentProps: {
+          options,
+          placeholder: empty ? '请先添加智能体' : '请选择AI视频讲解员',
+          notFoundContent: '请先添加智能体',
+          showSearch: true,
+          optionFilterProp: 'label',
+        },
+      },
+    ]);
+  },
+  { immediate: true },
+);
+
+// 视频分类选项加载后注入表单schema
+watch(
+  videoCategoryOpts,
+  (options) => {
+    formApi.updateSchema([
+      {
+        fieldName: 'videoCategoryId',
+        componentProps: {
+          options,
+          placeholder: '请选择视频分类',
+          notFoundContent: '暂无可选分类',
+          showSearch: true,
+          optionFilterProp: 'label',
+        },
+      },
+    ]);
+  },
+  { immediate: true },
+);
+
 const [BasicModal, modalApi] = useVbenModal({
   // 在这里更改宽度
   class: 'w-[1100px] !h-[88%] !max-h-[88%]',
@@ -143,6 +217,9 @@ const [BasicModal, modalApi] = useVbenModal({
     await loadAppOptions();
     loadVoiceOptions().catch((error) => {
       console.error('加载AI语音选项失败:', error);
+    });
+    loadVideoCategoryOptions().catch((error) => {
+      console.error('加载AI视频分类失败:', error);
     });
 
     const { id } = modalApi.getData() as { id?: number | string };
@@ -222,12 +299,39 @@ function toUnix(value: any): number | undefined {
 async function handleConfirm() {
   try {
     modalApi.modalLoading(true);
+    // AI视频开启但未配置智能体时先给出明确指引（讲解员选项依赖智能体配置）
+    const preValues = await formApi.getValues();
+    if (preValues.videoEnable === 1 && chatappRows.length === 0) {
+      message.warning('请先添加智能体');
+      return;
+    }
     const { valid } = await formApi.validate();
     if (!valid) {
       return;
     }
     if (!validateChatappRows()) {
       return;
+    }
+    // AI视频开启时校验讲解员/分类选项有效性（防止引用已删除的智能体或分类）
+    if (preValues.videoEnable === 1) {
+      if (
+        !preValues.videoChatappId ||
+        !chatappRows.some(
+          (row) => String(row.id) === String(preValues.videoChatappId),
+        )
+      ) {
+        message.warning('请选择AI视频讲解员');
+        return;
+      }
+      if (
+        !preValues.videoCategoryId ||
+        !videoCategoryOpts.value.some(
+          (o) => String(o.value) === String(preValues.videoCategoryId),
+        )
+      ) {
+        message.warning('请选择视频分类');
+        return;
+      }
     }
     // getValues获取为一个readonly的对象 需要修改必须先深拷贝一次
     const raw = await formApi.getValues();
@@ -237,6 +341,11 @@ async function handleConfirm() {
       startTime: toUnix(raw.startTime),
       endTime: toUnix(raw.endTime),
     });
+    // AI视频关闭时清空关联配置，避免残留旧值
+    if (data.videoEnable !== 1) {
+      data.videoCategoryId = undefined;
+      data.videoChatappId = undefined;
+    }
     data.chatapps = cloneDeep(chatappRows);
     await (isUpdate.value ? aimuseumUpdate(data) : aimuseumAdd(data));
     emit('reload');
