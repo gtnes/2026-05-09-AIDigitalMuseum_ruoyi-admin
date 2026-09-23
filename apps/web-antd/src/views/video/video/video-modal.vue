@@ -85,6 +85,7 @@ const defaultValues: Partial<AiVideoForm> = {
   description: undefined,
   duration: undefined,
   sort: 0,
+  topFlag: 0,
   status: '0',
   remark: undefined,
 };
@@ -135,9 +136,7 @@ const formRules = ref<AntdFormRules<AiVideoForm>>({
   title: [
     { required: true, message: $t('ui.formRules.required'), trigger: 'blur' },
   ],
-  videoUrl: [
-    { required: true, message: '请上传视频文件', trigger: 'change' },
-  ],
+  videoUrl: [{ required: true, message: '请上传视频文件', trigger: 'change' }],
 });
 
 const { validate, validateInfos, resetFields } = Form.useForm(
@@ -213,6 +212,7 @@ async function handleCancel() {
 <template>
   <BasicModal :title="title" class="w-[90%]">
     <Form :label-col="{ span: 24 }" :wrapper-col="{ span: 24 }">
+      <!-- 第1行：标题、所属分类、展示类别 -->
       <Row :gutter="16">
         <Col :span="8">
           <FormItem label="标题" v-bind="validateInfos.title">
@@ -223,7 +223,7 @@ async function handleCancel() {
             />
           </FormItem>
         </Col>
-        <Col :span="6">
+        <Col :span="8">
           <FormItem label="所属分类" v-bind="validateInfos.categoryId">
             <Select
               v-model:value="formData.categoryId"
@@ -240,7 +240,7 @@ async function handleCancel() {
             />
           </FormItem>
         </Col>
-        <Col :span="6">
+        <Col :span="8">
           <FormItem
             label="展示类别"
             v-bind="validateInfos.showCategory"
@@ -254,7 +254,11 @@ async function handleCancel() {
             />
           </FormItem>
         </Col>
-        <Col :span="4">
+      </Row>
+
+      <!-- 第2行：状态、排序、是否置顶 -->
+      <Row :gutter="16">
+        <Col :span="8">
           <FormItem label="状态" v-bind="validateInfos.status">
             <RadioGroup
               v-model:value="formData.status"
@@ -267,9 +271,6 @@ async function handleCancel() {
             />
           </FormItem>
         </Col>
-      </Row>
-
-      <Row :gutter="16">
         <Col :span="8">
           <FormItem label="排序" v-bind="validateInfos.sort">
             <InputNumber
@@ -279,6 +280,27 @@ async function handleCancel() {
             />
           </FormItem>
         </Col>
+        <Col :span="8">
+          <FormItem
+            label="是否置顶"
+            v-bind="validateInfos.topFlag"
+            extra="置顶视频在列表中优先展示"
+          >
+            <RadioGroup
+              v-model:value="formData.topFlag"
+              :options="[
+                { label: '是', value: 1 },
+                { label: '否', value: 0 },
+              ]"
+              option-type="button"
+              button-style="solid"
+            />
+          </FormItem>
+        </Col>
+      </Row>
+
+      <!-- 第3行：封面图片、视频文件、视频时长 -->
+      <Row :gutter="16">
         <Col :span="8">
           <FormItem label="封面图片" v-bind="validateInfos.coverUrl">
             <ImageUpload
@@ -302,9 +324,6 @@ async function handleCancel() {
             />
           </FormItem>
         </Col>
-      </Row>
-
-      <Row :gutter="16">
         <Col :span="8">
           <FormItem
             label="视频时长(秒)"
@@ -320,7 +339,11 @@ async function handleCancel() {
             />
           </FormItem>
         </Col>
-        <Col :span="16">
+      </Row>
+
+      <!-- 第4行：描述、备注 -->
+      <Row :gutter="16">
+        <Col :span="12">
           <FormItem label="描述" v-bind="validateInfos.description">
             <Textarea
               v-model:value="formData.description"
@@ -330,15 +353,16 @@ async function handleCancel() {
             />
           </FormItem>
         </Col>
+        <Col :span="12">
+          <FormItem label="备注" v-bind="validateInfos.remark">
+            <Textarea
+              v-model:value="formData.remark"
+              :rows="2"
+              placeholder="备注"
+            />
+          </FormItem>
+        </Col>
       </Row>
-
-      <FormItem label="备注" v-bind="validateInfos.remark">
-        <Textarea
-          v-model:value="formData.remark"
-          :rows="2"
-          placeholder="备注"
-        />
-      </FormItem>
     </Form>
 
     <div class="border-t border-gray-200 px-4 pt-3 dark:border-gray-700">
@@ -367,7 +391,12 @@ async function handleCancel() {
           :placeholder="`预设问题 ${index + 1}`"
           class="flex-1"
         />
-        <a-button danger size="small" type="text" @click="removeQuestion(index)">
+        <a-button
+          danger
+          size="small"
+          type="text"
+          @click="removeQuestion(index)"
+        >
           <template #icon>
             <DeleteOutlined />
           </template>

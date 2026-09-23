@@ -62,6 +62,11 @@ export interface AiVideoVO {
   sort: number;
 
   /**
+   * 是否置顶(0否 1是)
+   */
+  topFlag: number;
+
+  /**
    * 状态(0正常 1停用)
    */
   status: string;
@@ -127,6 +132,11 @@ export interface AiVideoForm extends BaseEntity {
    * 显示顺序
    */
   sort?: number;
+
+  /**
+   * 是否置顶(0否 1是)
+   */
+  topFlag?: number;
 
   /**
    * 状态(0正常 1停用)

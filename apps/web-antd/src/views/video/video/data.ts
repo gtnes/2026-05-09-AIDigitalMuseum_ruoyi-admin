@@ -94,6 +94,16 @@ export const columns: VxeGridProps['columns'] = [
     width: 90,
   },
   {
+    title: '置顶',
+    field: 'topFlag',
+    width: 70,
+    slots: {
+      default: ({ row }) => {
+        return row.topFlag === 1 ? '是' : '否';
+      },
+    },
+  },
+  {
     title: '排序',
     field: 'sort',
     width: 70,
