@@ -18,7 +18,7 @@ import {
   voiceProfileExport,
   voiceProfileList,
   voiceProfileRemove,
-  voiceTtsSynthesize,
+  voiceTtsPreview,
   voicePlatformOptions,
 } from '#/api/voice/profile';
 import { commonDownloadExcel } from '#/utils/file/download';
@@ -143,7 +143,16 @@ async function handlePreview(row: Recordable<any>) {
   try {
     previewLoadingId.value = row.id;
     stopAudio();
-    const res = await voiceTtsSynthesize({ voiceId: row.id, text });
+    // 走试听接口（同编辑弹窗）：/voice/tts/preview 有权限校验，不走C端防直刷守卫（签名/频率/日配额），
+    // 行数据已含试听所需的平台音色、模型与语速参数
+    const res = await voiceTtsPreview({
+      platformVoiceId: row.platformVoiceId,
+      modelId: row.modelId,
+      text,
+      speed: row.speed,
+      pitch: row.pitch,
+      volume: row.volume,
+    });
     audio = new Audio(res.dataUrl);
     // 播放结束或出错都要复位，否则按钮停留在"停止"状态
     const done = () => {

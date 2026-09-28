@@ -56,17 +56,11 @@ export function voiceProfileRemove(id: ID | IDS) {
 }
 
 /**
- * 语音合成试听(编辑弹窗内即时试听，无需先保存)
+ * 语音合成试听(编辑弹窗/列表行即时试听，无需先保存)
+ * 注意：列表行试听不要改走 /voice/tts——该接口是C端播报接口，须携带HMAC签名且受单IP频率/日配额限制
  */
 export function voiceTtsPreview(data: VoiceTtsPreviewForm) {
   return requestClient.post<VoiceTtsVO>('/voice/tts/preview', data);
-}
-
-/**
- * 按已保存的音色档案合成语音(列表行试听/C端播报)
- */
-export function voiceTtsSynthesize(data: { text: string; voiceId: ID }) {
-  return requestClient.post<VoiceTtsVO>('/voice/tts', data);
 }
 
 /**
