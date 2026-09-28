@@ -75,6 +75,8 @@ export const columns: VxeGridProps['columns'] = [
     title: '主键',
     field: 'id',
     width: 180,
+    // 点击主键以查看模式打开详情弹窗
+    slots: { default: 'id' },
   },
   {
     title: '展示标题',

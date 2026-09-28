@@ -81,6 +81,12 @@ async function handleEdit(row: Required<AimuseumForm>) {
   modalApi.open();
 }
 
+/** 查看详情：复用编辑弹窗，只读模式 */
+function handleView(row: Required<AimuseumForm>) {
+  modalApi.setData({ id: row.id, view: true });
+  modalApi.open();
+}
+
 async function handleDelete(row: Required<AimuseumForm>) {
   await aimuseumRemove(row.id);
   await tableApi.query();
@@ -140,6 +146,15 @@ function handleDownloadExcel() {
             {{ $t('pages.common.add') }}
           </a-button>
         </Space>
+      </template>
+      <template #id="{ row }">
+        <a-button
+          type="link"
+          class="!h-auto !p-0"
+          @click.stop="handleView(row)"
+        >
+          {{ row.id }}
+        </a-button>
       </template>
       <template #action="{ row }">
         <Space>

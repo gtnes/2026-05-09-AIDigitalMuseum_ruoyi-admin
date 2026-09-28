@@ -39,7 +39,12 @@ import { modalSchema } from './data';
 const emit = defineEmits<{ reload: [] }>();
 
 const isUpdate = ref(false);
+/** 查看模式：复用编辑弹窗，全部控件只读 */
+const isView = ref(false);
 const title = computed(() => {
+  if (isView.value) {
+    return '查看';
+  }
   return isUpdate.value ? $t('pages.common.edit') : $t('pages.common.add');
 });
 
@@ -286,9 +291,16 @@ const [BasicModal, modalApi] = useVbenModal({
       console.error('加载AI视频分类失败:', error);
     });
 
-    const { id } = modalApi.getData() as { id?: number | string };
+    const { id, view } = modalApi.getData() as {
+      id?: number | string;
+      view?: boolean;
+    };
     isUpdate.value = !!id;
+    isView.value = !!view;
     museumId.value = id;
+    // 查看模式：禁用表单并隐藏确认按钮；编辑/新增恢复
+    await formApi.setState({ commonConfig: { disabled: isView.value } });
+    modalApi.setState({ showConfirmButton: !isView.value });
 
     if (isUpdate.value && id) {
       const record = await aimuseumInfo(id);
@@ -370,6 +382,11 @@ function toUnix(value: any): number | undefined {
 }
 
 async function handleConfirm() {
+  // 查看模式无确认按钮，此处仅作防御
+  if (isView.value) {
+    await handleCancel();
+    return;
+  }
   try {
     modalApi.modalLoading(true);
     // AI视频开启但未配置智能体时先给出明确指引（讲解员选项依赖智能体配置）
@@ -448,10 +465,70 @@ async function handleCancel() {
 <template>
   <BasicModal :title="title">
     <BasicForm />
+    <!-- 域名配置：智能体配置上方，可配置多个域名，默认为空 -->
+    <div class="border-t border-gray-200 px-4 pt-3 dark:border-gray-700">
+      <div class="mb-2 flex items-center justify-between">
+        <span class="text-sm font-medium">域名配置</span>
+        <a-button
+          v-if="!isView"
+          size="small"
+          type="primary"
+          @click="addDomainRow"
+        >
+          <template #icon>
+            <PlusOutlined />
+          </template>
+          添加域名
+        </a-button>
+      </div>
+      <div
+        v-if="domainRows.length === 0"
+        class="py-4 text-center text-sm text-gray-400"
+      >
+        暂无域名，点击"添加域名"进行配置
+      </div>
+      <div
+        v-for="(row, index) in domainRows"
+        :key="index"
+        class="mb-2 flex items-center gap-2"
+      >
+        <Select
+          v-model:value="row.envType"
+          :options="envTypeOptions"
+          :disabled="isView"
+          class="w-[110px] shrink-0"
+        />
+        <Input
+          v-model:value="row.domain"
+          :disabled="isView"
+          placeholder="请输入域名，例如：localhost:5173"
+          allow-clear
+        />
+        <Tooltip :title="previewTip(row)">
+          <a-button size="small" type="text" @click="previewDomain(row)">
+            <template #icon>
+              <EyeOutlined />
+            </template>
+          </a-button>
+        </Tooltip>
+        <a-button
+          v-if="!isView"
+          danger
+          size="small"
+          type="text"
+          @click="removeDomainRow(index)"
+        >
+          <template #icon>
+            <DeleteOutlined />
+          </template>
+        </a-button>
+      </div>
+    </div>
+    <!-- 智能体配置 -->
     <div class="border-t border-gray-200 px-4 pt-3 dark:border-gray-700">
       <div class="mb-2 flex items-center justify-between">
         <span class="text-sm font-medium">智能体配置</span>
-        <a-button size="small" type="primary" @click="addAppRow">
+        <a-button v-if="!isView" size="small" type="primary" @click="addAppRow">
           <template #icon>
             <PlusOutlined />
           </template>
@@ -475,6 +552,7 @@ async function handleCancel() {
             智能体 {{ index + 1 }}
           </span>
           <a-button
+            v-if="!isView"
             danger
             size="small"
             type="text"
@@ -495,6 +573,7 @@ async function handleCancel() {
             <Select
               v-model:value="row.id"
               :options="appOptions"
+              :disabled="isView"
               placeholder="请选择智能体（来自应用管理）"
               show-search
               option-filter-prop="label"
@@ -503,12 +582,17 @@ async function handleCancel() {
           </div>
           <div class="mb-2">
             <div class="mb-1 text-xs text-gray-500">职责</div>
-            <Input v-model:value="row.duty" placeholder="请输入职责" />
+            <Input
+              v-model:value="row.duty"
+              :disabled="isView"
+              placeholder="请输入职责"
+            />
           </div>
           <div class="mb-2">
             <div class="mb-1 text-xs text-gray-500">展示排序</div>
             <InputNumber
               v-model:value="row.sort"
+              :disabled="isView"
               :min="0"
               class="!w-full"
               placeholder="数字越小越靠前"
@@ -522,6 +606,7 @@ async function handleCancel() {
             <Select
               v-model:value="row.voiceProfileId"
               :options="voiceOptions"
+              :disabled="isView"
               placeholder="请选择AI语音（可选）"
               allow-clear
               show-search
@@ -537,6 +622,7 @@ async function handleCancel() {
             <div class="flex h-[32px] items-center">
               <Switch
                 v-model:checked="row.voiceEnabled"
+                :disabled="isView"
                 checked-children="开"
                 un-checked-children="关"
               />
@@ -550,6 +636,7 @@ async function handleCancel() {
             <div class="flex h-[32px] items-center">
               <Switch
                 v-model:checked="row.voiceAutoPlay"
+                :disabled="isView"
                 checked-children="开"
                 un-checked-children="关"
               />
@@ -561,6 +648,7 @@ async function handleCancel() {
             <div class="mb-1 text-xs text-gray-500">背景图片</div>
             <ImageUpload
               v-model:value="row.bgUrl"
+              :disabled="isView"
               :max-count="1"
               help-message
             />
@@ -569,6 +657,7 @@ async function handleCancel() {
             <div class="mb-1 text-xs text-gray-500">待机形象（图片/GIF）</div>
             <ImageUpload
               v-model:value="row.idleImgUrl"
+              :disabled="isView"
               :max-count="1"
               help-message
             />
@@ -577,6 +666,7 @@ async function handleCancel() {
             <div class="mb-1 text-xs text-gray-500">说话形象（GIF）</div>
             <ImageUpload
               v-model:value="row.talkingGifUrl"
+              :disabled="isView"
               :max-count="1"
               help-message
             />
@@ -586,61 +676,11 @@ async function handleCancel() {
           <div class="mb-1 text-xs text-gray-500">说明</div>
           <Textarea
             v-model:value="row.description"
+            :disabled="isView"
             :rows="2"
             placeholder="智能体说明"
           />
         </div>
-      </div>
-    </div>
-    <!-- 域名配置：智能体配置下方，可配置多个域名，默认为空 -->
-    <div class="border-t border-gray-200 px-4 pt-3 dark:border-gray-700">
-      <div class="mb-2 flex items-center justify-between">
-        <span class="text-sm font-medium">域名配置</span>
-        <a-button size="small" type="primary" @click="addDomainRow">
-          <template #icon>
-            <PlusOutlined />
-          </template>
-          添加域名
-        </a-button>
-      </div>
-      <div
-        v-if="domainRows.length === 0"
-        class="py-4 text-center text-sm text-gray-400"
-      >
-        暂无域名，点击"添加域名"进行配置
-      </div>
-      <div
-        v-for="(row, index) in domainRows"
-        :key="index"
-        class="mb-2 flex items-center gap-2"
-      >
-        <Select
-          v-model:value="row.envType"
-          :options="envTypeOptions"
-          class="w-[110px] shrink-0"
-        />
-        <Input
-          v-model:value="row.domain"
-          placeholder="请输入域名，例如：localhost:5173"
-          allow-clear
-        />
-        <Tooltip :title="previewTip(row)">
-          <a-button size="small" type="text" @click="previewDomain(row)">
-            <template #icon>
-              <EyeOutlined />
-            </template>
-          </a-button>
-        </Tooltip>
-        <a-button
-          danger
-          size="small"
-          type="text"
-          @click="removeDomainRow(index)"
-        >
-          <template #icon>
-            <DeleteOutlined />
-          </template>
-        </a-button>
       </div>
     </div>
   </BasicModal>
