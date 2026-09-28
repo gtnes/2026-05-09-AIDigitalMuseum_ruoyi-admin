@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import type { AimuseumAppForm, AimuseumForm } from '#/api/chat/aimuseum/model';
+import type {
+  AimuseumAppForm,
+  AimuseumDomain,
+  AimuseumForm,
+} from '#/api/chat/aimuseum/model';
 
 import { computed, reactive, ref, watch } from 'vue';
 
@@ -7,7 +11,11 @@ import { useVbenModal } from '@vben/common-ui';
 import { $t } from '@vben/locales';
 import { cloneDeep } from '@vben/utils';
 
-import { DeleteOutlined, PlusOutlined } from '@ant-design/icons-vue';
+import {
+  DeleteOutlined,
+  EyeOutlined,
+  PlusOutlined,
+} from '@ant-design/icons-vue';
 import {
   Input,
   InputNumber,
@@ -15,6 +23,7 @@ import {
   Select,
   Switch,
   Textarea,
+  Tooltip,
 } from 'ant-design-vue';
 import dayjs from 'dayjs';
 
@@ -64,6 +73,61 @@ function addAppRow() {
 
 function removeAppRow(index: number) {
   chatappRows.splice(index, 1);
+}
+
+/** 域名行：域名 + 环境类型 */
+interface DomainRow {
+  domain: string;
+  envType: 'dev' | 'prod';
+}
+
+/** 域名配置列表（可配置多个域名，默认为空） */
+const domainRows = reactive<DomainRow[]>([]);
+
+/** 环境类型选项：本地开发 / 生产环境 */
+const envTypeOptions = [
+  { label: '本地开发', value: 'dev' },
+  { label: '生产环境', value: 'prod' },
+];
+
+/** 当前编辑的博物馆id（域名预览链接的museum参数） */
+const museumId = ref<number | string | undefined>();
+
+function addDomainRow() {
+  domainRows.push({ domain: '', envType: 'dev' });
+}
+
+function removeDomainRow(index: number) {
+  domainRows.splice(index, 1);
+}
+
+/** 拼接预览地址：{域名}/museum?id={museumId}（域名缺协议时补http://） */
+function buildPreviewUrl(row: DomainRow): string {
+  const domain = row.domain.trim();
+  if (!domain || !museumId.value) {
+    return '';
+  }
+  const base = /^https?:\/\//i.test(domain) ? domain : `http://${domain}`;
+  return `${base.replace(/\/+$/, '')}/museum?id=${museumId.value}`;
+}
+
+/** 预览按钮tip：可预览时显示补全后的完整地址 */
+function previewTip(row: DomainRow): string {
+  const url = buildPreviewUrl(row);
+  if (url) {
+    return url;
+  }
+  return museumId.value ? '输入域名后可预览' : '保存后可预览';
+}
+
+/** 预览域名：新窗口打开该域名的博物馆页面 */
+function previewDomain(row: DomainRow) {
+  const url = buildPreviewUrl(row);
+  if (!url) {
+    message.warning(museumId.value ? '请先输入域名' : '请先保存后再预览');
+    return;
+  }
+  window.open(url, '_blank');
 }
 
 /** 智能体块循环配色（蓝/绿/紫/橙），相邻智能体用不同底色便于区分 */
@@ -224,6 +288,7 @@ const [BasicModal, modalApi] = useVbenModal({
 
     const { id } = modalApi.getData() as { id?: number | string };
     isUpdate.value = !!id;
+    museumId.value = id;
 
     if (isUpdate.value && id) {
       const record = await aimuseumInfo(id);
@@ -254,6 +319,14 @@ const [BasicModal, modalApi] = useVbenModal({
           voiceEnabled: item.voiceEnabled ?? true,
           voiceAutoPlay: item.voiceAutoPlay ?? false,
           sort: item.sort,
+        })),
+      );
+      domainRows.length = 0;
+      domainRows.push(
+        ...(record.domains ?? []).map((item) => ({
+          domain: item.domain ?? '',
+          // 旧数据/非法值兜底为本地开发
+          envType: (item.envType === 'prod' ? 'prod' : 'dev') as 'dev' | 'prod',
         })),
       );
     }
@@ -347,6 +420,13 @@ async function handleConfirm() {
       data.videoChatappId = undefined;
     }
     data.chatapps = cloneDeep(chatappRows);
+    // 域名配置：去除首尾空格并过滤空行
+    data.domains = domainRows
+      .map((row) => ({
+        domain: row.domain.trim(),
+        envType: row.envType,
+      }))
+      .filter((row) => row.domain !== '') as AimuseumDomain[];
     await (isUpdate.value ? aimuseumUpdate(data) : aimuseumAdd(data));
     emit('reload');
     await handleCancel();
@@ -361,6 +441,7 @@ async function handleCancel() {
   modalApi.close();
   await formApi.resetForm();
   chatappRows.length = 0;
+  domainRows.length = 0;
 }
 </script>
 
@@ -509,6 +590,57 @@ async function handleCancel() {
             placeholder="智能体说明"
           />
         </div>
+      </div>
+    </div>
+    <!-- 域名配置：智能体配置下方，可配置多个域名，默认为空 -->
+    <div class="border-t border-gray-200 px-4 pt-3 dark:border-gray-700">
+      <div class="mb-2 flex items-center justify-between">
+        <span class="text-sm font-medium">域名配置</span>
+        <a-button size="small" type="primary" @click="addDomainRow">
+          <template #icon>
+            <PlusOutlined />
+          </template>
+          添加域名
+        </a-button>
+      </div>
+      <div
+        v-if="domainRows.length === 0"
+        class="py-4 text-center text-sm text-gray-400"
+      >
+        暂无域名，点击"添加域名"进行配置
+      </div>
+      <div
+        v-for="(row, index) in domainRows"
+        :key="index"
+        class="mb-2 flex items-center gap-2"
+      >
+        <Select
+          v-model:value="row.envType"
+          :options="envTypeOptions"
+          class="w-[110px] shrink-0"
+        />
+        <Input
+          v-model:value="row.domain"
+          placeholder="请输入域名，例如：localhost:5173"
+          allow-clear
+        />
+        <Tooltip :title="previewTip(row)">
+          <a-button size="small" type="text" @click="previewDomain(row)">
+            <template #icon>
+              <EyeOutlined />
+            </template>
+          </a-button>
+        </Tooltip>
+        <a-button
+          danger
+          size="small"
+          type="text"
+          @click="removeDomainRow(index)"
+        >
+          <template #icon>
+            <DeleteOutlined />
+          </template>
+        </a-button>
       </div>
     </div>
   </BasicModal>

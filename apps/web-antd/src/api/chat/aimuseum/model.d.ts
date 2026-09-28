@@ -60,6 +60,21 @@ export interface AimuseumAppVO {
   sort?: number;
 }
 
+/**
+ * 域名配置（ai_museum.domains JSON字段元素）
+ */
+export interface AimuseumDomain {
+  /**
+   * 域名（如 localhost:5173 或 example.com）
+   */
+  domain?: string;
+
+  /**
+   * 环境类型（dev本地开发 prod生产环境）
+   */
+  envType?: string;
+}
+
 export interface AimuseumVO {
   /**
    * 主键
@@ -145,6 +160,11 @@ export interface AimuseumVO {
    * 智能体配置列表
    */
   chatapps?: AimuseumAppVO[];
+
+  /**
+   * 域名配置列表（可配置多个域名，默认为空，元素含域名与环境类型）
+   */
+  domains?: AimuseumDomain[];
 
   /**
    * 备注
@@ -284,6 +304,11 @@ export interface AimuseumForm extends BaseEntity {
    * 智能体配置列表
    */
   chatapps?: AimuseumAppForm[];
+
+  /**
+   * 域名配置列表（可配置多个域名，默认为空，元素含域名与环境类型）
+   */
+  domains?: AimuseumDomain[];
 
   /**
    * 备注
