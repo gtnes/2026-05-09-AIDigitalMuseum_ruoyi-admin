@@ -120,8 +120,15 @@ pnpm install
 # 启动开发服务器
 pnpm dev
 
-# 构建生产版本
+# 构建生产版本（官方）
 pnpm build
+
+# 构建方式（推荐）
+# 方式1:根目录(README 里对应 pnpm build:antd)
+pnpm build:antd
+# 方式2:进入应用目录
+cd apps\web-antd
+pnpm build:prod
 ```
 
 ## 常见问题
