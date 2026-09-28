@@ -54,6 +54,14 @@ const formOptions: VbenFormProps = {
       label: '应用名称',
     },
     {
+      component: 'Input',
+      componentProps: {
+        placeholder: 'IP（模糊匹配）',
+      },
+      fieldName: 'clientIp',
+      label: '访问IP',
+    },
+    {
       component: 'RangePicker',
       componentProps: {
         valueFormat: 'YYYY-MM-DD',
@@ -91,6 +99,30 @@ const columns: VxeGridProps['columns'] = [
   { field: 'tokensIn', title: '输入token', width: 110 },
   { field: 'tokensOut', title: '输出token', width: 110 },
   { field: 'cost', title: '费用(元)', width: 110 },
+  {
+    field: 'clientIp',
+    title: 'IP',
+    slots: { default: 'clientIp' },
+    width: 140,
+  },
+  {
+    field: 'location',
+    title: '归属地',
+    slots: { default: 'location' },
+    minWidth: 140,
+  },
+  {
+    field: 'todayCalls',
+    title: '当日调用/费用',
+    slots: { default: 'todayStats' },
+    width: 120,
+  },
+  {
+    field: 'totalCalls',
+    title: '累计调用/费用',
+    slots: { default: 'totalStats' },
+    width: 120,
+  },
   { field: 'operName', title: '操作人', width: 110 },
   { field: 'createTime', title: '调用时间', width: 170 },
 ];
@@ -134,6 +166,11 @@ function handleDownloadExcel() {
     },
   );
 }
+
+/** IP统计费用显示：聚合SUM可能带6位小数，统一保留2位 */
+function formatCost(value?: number | null) {
+  return Number(value ?? 0).toFixed(2);
+}
 </script>
 
 <template>
@@ -154,6 +191,20 @@ function handleDownloadExcel() {
       </template>
       <template #bizType="{ row }">
         {{ row.bizType === 'chat' ? '对话' : '语音合成' }}
+      </template>
+      <template #clientIp="{ row }">
+        {{ row.clientIp || '-' }}
+      </template>
+      <template #location="{ row }">
+        {{ row.location || '-' }}
+      </template>
+      <template #todayStats="{ row }">
+        <div>{{ row.todayCalls ?? 0 }} 次</div>
+        <div>{{ formatCost(row.todayCost) }} 元</div>
+      </template>
+      <template #totalStats="{ row }">
+        <div>{{ row.totalCalls ?? 0 }} 次</div>
+        <div>{{ formatCost(row.totalCost) }} 元</div>
       </template>
     </BasicTable>
   </Page>

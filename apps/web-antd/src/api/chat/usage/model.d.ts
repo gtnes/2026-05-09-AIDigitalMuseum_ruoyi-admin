@@ -55,6 +55,36 @@ export interface UsageVO extends BaseEntity {
   cost: number;
 
   /**
+   * 访问者IP
+   */
+  clientIp: string;
+
+  /**
+   * IP归属地（内网显示"内网IP"）
+   */
+  location: string;
+
+  /**
+   * 该IP当日累计调用次数
+   */
+  todayCalls: number;
+
+  /**
+   * 该IP当日累计费用（元）
+   */
+  todayCost: number;
+
+  /**
+   * 该IP历史总调用次数
+   */
+  totalCalls: number;
+
+  /**
+   * 该IP历史总费用（元）
+   */
+  totalCost: number;
+
+  /**
    * 操作人ID
    */
   operId: number | string;
@@ -80,6 +110,11 @@ export interface UsageQuery extends PageQuery {
    * 应用名称（模糊查询）
    */
   appName?: string;
+
+  /**
+   * 访问者IP（模糊匹配，排查刷量）
+   */
+  clientIp?: string;
 
   /**
    * 日期范围参数

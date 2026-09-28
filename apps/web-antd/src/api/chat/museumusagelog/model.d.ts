@@ -63,6 +63,36 @@ export interface MuseumUsageLogVO extends BaseEntity {
    * 费用（元）
    */
   cost: number;
+
+  /**
+   * 访问者IP
+   */
+  clientIp: string;
+
+  /**
+   * IP归属地（内网显示"内网IP"）
+   */
+  location: string;
+
+  /**
+   * 该IP当日累计调用次数
+   */
+  todayCalls: number;
+
+  /**
+   * 该IP当日累计费用（元）
+   */
+  todayCost: number;
+
+  /**
+   * 该IP历史总调用次数
+   */
+  totalCalls: number;
+
+  /**
+   * 该IP历史总费用（元）
+   */
+  totalCost: number;
 }
 
 export interface MuseumUsageLogQuery extends PageQuery {
@@ -75,6 +105,11 @@ export interface MuseumUsageLogQuery extends PageQuery {
    * 业务类型（chat=对话 tts=语音合成）
    */
   bizType?: string;
+
+  /**
+   * 访问者IP（模糊匹配，排查刷量）
+   */
+  clientIp?: string;
 
   /**
    * 日期范围参数
