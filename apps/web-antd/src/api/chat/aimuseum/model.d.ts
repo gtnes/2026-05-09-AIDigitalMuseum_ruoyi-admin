@@ -58,6 +58,16 @@ export interface AimuseumAppVO {
    * 展示排序
    */
   sort?: number;
+
+  /**
+   * 智能体状态（1正常 0停用，停用后C端无法调用；null视为正常）
+   */
+  appStatus?: number;
+
+  /**
+   * 首页显示（1开启 0关闭，关闭后博物馆首页圆圈区不显示；null视为开启）
+   */
+  homeShow?: number;
 }
 
 /**
@@ -157,6 +167,16 @@ export interface AimuseumVO {
   videoChatappId: number | string;
 
   /**
+   * AI视频模块别名（C端底部tabbar显示名，空=默认"AI视频"）
+   */
+  videoAlias?: string;
+
+  /**
+   * VR模块别名（C端底部tabbar显示名，空=默认"虚拟空间"）
+   */
+  vrAlias?: string;
+
+  /**
    * 智能体配置列表
    */
   chatapps?: AimuseumAppVO[];
@@ -222,6 +242,16 @@ export interface AimuseumAppForm {
    * 展示排序
    */
   sort?: number;
+
+  /**
+   * 智能体状态（1正常 0停用，停用后C端无法调用；null视为正常）
+   */
+  appStatus?: number;
+
+  /**
+   * 首页显示（1开启 0关闭，关闭后博物馆首页圆圈区不显示；null视为开启）
+   */
+  homeShow?: number;
 }
 
 export interface AimuseumForm extends BaseEntity {
@@ -299,6 +329,16 @@ export interface AimuseumForm extends BaseEntity {
    * AI视频讲解员（chatapp.id，从本博物馆智能体配置中选择）
    */
   videoChatappId?: number | string;
+
+  /**
+   * AI视频模块别名（C端底部tabbar显示名，空=默认"AI视频"）
+   */
+  videoAlias?: string;
+
+  /**
+   * VR模块别名（C端底部tabbar显示名，空=默认"虚拟空间"）
+   */
+  vrAlias?: string;
 
   /**
    * 智能体配置列表

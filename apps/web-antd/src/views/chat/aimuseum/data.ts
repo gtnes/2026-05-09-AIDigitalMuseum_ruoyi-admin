@@ -266,6 +266,16 @@ export const modalSchema: FormSchemaGetter = () => [
     rules: 'required',
   },
   {
+    // VR开关下方，非必填，控制C端底部tabbar"虚拟空间"标签显示名
+    label: 'VR模块别名',
+    fieldName: 'vrAlias',
+    component: 'Input',
+    componentProps: {
+      placeholder: '不填默认显示"虚拟空间"',
+      maxlength: 50,
+    },
+  },
+  {
     // 独占一行，位于VR开关下方
     formItemClass: 'col-span-2',
     label: 'AI视频开关',
@@ -280,6 +290,16 @@ export const modalSchema: FormSchemaGetter = () => [
       optionType: 'button',
     },
     defaultValue: 0,
+  },
+  {
+    // AI视频开关下方，非必填，控制C端底部tabbar"AI视频"标签显示名
+    label: 'AI视频模块别名',
+    fieldName: 'videoAlias',
+    component: 'Input',
+    componentProps: {
+      placeholder: '不填默认显示"AI视频"',
+      maxlength: 50,
+    },
   },
   {
     // 与AI视频讲解员同行，仅开启AI视频时渲染

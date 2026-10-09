@@ -20,6 +20,7 @@ import {
   Input,
   InputNumber,
   message,
+  RadioGroup,
   Select,
   Switch,
   Textarea,
@@ -73,6 +74,9 @@ function addAppRow() {
     voiceEnabled: true,
     voiceAutoPlay: false,
     sort: chatappRows.length + 1,
+    // 智能体状态默认正常、首页显示默认开启（旧数据无字段视为正常/显示）
+    appStatus: 1,
+    homeShow: 1,
   });
 }
 
@@ -331,6 +335,9 @@ const [BasicModal, modalApi] = useVbenModal({
           voiceEnabled: item.voiceEnabled ?? true,
           voiceAutoPlay: item.voiceAutoPlay ?? false,
           sort: item.sort,
+          // 旧数据无状态/首页显示字段（null），视为正常/显示保持原行为
+          appStatus: item.appStatus ?? 1,
+          homeShow: item.homeShow ?? 1,
         })),
       );
       domainRows.length = 0;
@@ -564,7 +571,46 @@ async function handleCancel() {
             删除
           </a-button>
         </div>
-        <!-- 第一行三列：智能体 / 职责 / 展示排序 -->
+        <!-- 第一行：智能体状态 / 首页显示（与下方三列网格对齐） -->
+        <div class="grid grid-cols-3 gap-x-4">
+          <div class="mb-2">
+            <div class="mb-1 text-xs text-gray-500">
+              智能体状态
+              <span class="text-gray-400">（停用后C端无法调用）</span>
+            </div>
+            <div class="flex h-[32px] items-center">
+              <RadioGroup
+                v-model:value="row.appStatus"
+                :disabled="isView"
+                :options="[
+                  { label: '正常', value: 1 },
+                  { label: '停用', value: 0 },
+                ]"
+                option-type="button"
+                button-style="solid"
+              />
+            </div>
+          </div>
+          <div class="mb-2">
+            <div class="mb-1 text-xs text-gray-500">
+              首页显示
+              <span class="text-gray-400">（关闭后不在博物馆首页显示）</span>
+            </div>
+            <div class="flex h-[32px] items-center">
+              <RadioGroup
+                v-model:value="row.homeShow"
+                :disabled="isView"
+                :options="[
+                  { label: '开启', value: 1 },
+                  { label: '关闭', value: 0 },
+                ]"
+                option-type="button"
+                button-style="solid"
+              />
+            </div>
+          </div>
+        </div>
+        <!-- 第二行三列：智能体 / 职责 / 展示排序 -->
         <div class="grid grid-cols-3 gap-x-4">
           <div class="mb-2">
             <div class="mb-1 text-xs text-gray-500">
@@ -599,7 +645,7 @@ async function handleCancel() {
             />
           </div>
         </div>
-        <!-- 第二行三列：AI语音 / 语音开关 / 语音自动播报 -->
+        <!-- 第三行三列：AI语音 / 语音开关 / 语音自动播报 -->
         <div class="grid grid-cols-3 gap-x-4">
           <div class="mb-2">
             <div class="mb-1 text-xs text-gray-500">AI语音</div>
