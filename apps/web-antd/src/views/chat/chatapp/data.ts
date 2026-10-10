@@ -11,10 +11,10 @@ import { renderDict } from '#/utils/render';
 
 /** 请求地址提示：v1/v2 接口地址示例（\n 换行） */
 const API_HOST_TIP = [
-  'v1应用调用（智能体ID留空）：',
+  '阿里百炼：v1应用调用（智能体ID留空）：',
   'https://dashscope.aliyuncs.com/api/v1/apps/{应用ID}/completion',
   '',
-  'v2知识问答（需同时填写下方智能体ID）：',
+  '阿里百炼：v2知识问答（需同时填写下方智能体ID）：',
   'https://{workspaceId}.cn-beijing.maas.aliyuncs.com/api/v2/apps/knowledge/chat',
 ].join('\n');
 
