@@ -22,6 +22,11 @@ export interface ChatappVO {
   providerCode: number | string;
 
   /**
+   * 智能体ID（百炼知识问答v2接口的agent_id，aid-xxx格式；旧v1应用调用为空）
+   */
+  agentId?: string;
+
+  /**
    * 输入token单价（元/千token，空=不计费）
    */
   priceInPer1k?: number;
@@ -92,6 +97,11 @@ export interface ChatappForm extends BaseEntity {
    * 密钥
    */
   apiKey?: string;
+
+  /**
+   * 智能体ID（百炼知识问答v2接口的agent_id，aid-xxx格式；旧v1应用调用为空）
+   */
+  agentId?: string;
 
   /**
    * 输入token单价（元/千token，空=不计费）

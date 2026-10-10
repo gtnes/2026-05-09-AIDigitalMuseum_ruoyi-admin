@@ -1,8 +1,49 @@
 import type { FormSchemaGetter } from '#/adapter/form';
 import type { VxeGridProps } from '#/adapter/vxe-table';
 
+import { h } from 'vue';
+
+import { QuestionCircleOutlined } from '@ant-design/icons-vue';
+import { Tooltip } from 'ant-design-vue';
+
 import { getDictOptions } from '#/utils/dict';
 import { renderDict } from '#/utils/render';
+
+/** 请求地址提示：v1/v2 接口地址示例（\n 换行） */
+const API_HOST_TIP = [
+  'v1应用调用（智能体ID留空）：',
+  'https://dashscope.aliyuncs.com/api/v1/apps/{应用ID}/completion',
+  '',
+  'v2知识问答（需同时填写下方智能体ID）：',
+  'https://{workspaceId}.cn-beijing.maas.aliyuncs.com/api/v2/apps/knowledge/chat',
+].join('\n');
+
+/** 请求地址 label：文字 + 提示图标，hover 显示 v1/v2 请求地址示例（URL 单行展示） */
+function renderApiHostLabel() {
+  return h('span', { class: 'inline-flex items-center' }, [
+    '请求地址',
+    h(
+      Tooltip,
+      {
+        placement: 'top',
+        overlayStyle: { maxWidth: '720px' },
+      },
+      {
+        title: () =>
+          h(
+            'div',
+            { style: { fontSize: '12px', whiteSpace: 'pre-line' } },
+            API_HOST_TIP,
+          ),
+        default: () =>
+          h(QuestionCircleOutlined, {
+            style:
+              'margin-left: 4px; color: inherit; opacity: 0.65; cursor: help;',
+          }),
+      },
+    ),
+  ]);
+}
 
 export const querySchema: FormSchemaGetter = () => [
   {
@@ -158,23 +199,37 @@ export const modalSchema: FormSchemaGetter = () => [
     rules: 'selectRequired',
   },
   {
-    // 与密钥同行
-    label: '请求地址',
+    // 独占一行，密钥和智能体ID排下一行
+    label: renderApiHostLabel,
     fieldName: 'apiHost',
     component: 'Textarea',
     componentProps: {
       rows: 2,
     },
+    // 标签带提示图标略宽，单独放宽该项label宽度避免换行
+    labelWidth: 100,
+    formItemClass: 'col-span-2',
     rules: 'required',
   },
   {
-    // 与请求地址同行
+    // 与智能体ID同行
     label: '密钥',
     fieldName: 'apiKey',
     component: 'Textarea',
     componentProps: {
       rows: 2,
     },
+  },
+  {
+    // 与密钥同行
+    label: '智能体ID',
+    fieldName: 'agentId',
+    component: 'Input',
+    componentProps: {
+      placeholder: 'aid-开头，旧版应用调用留空',
+      maxlength: 100,
+    },
+    help: '仅百炼新版知识问答接口需填写（控制台知识问答页发布后获取）',
   },
   {
     // 与备注同行
@@ -205,7 +260,7 @@ export const modalSchema: FormSchemaGetter = () => [
     },
   },
   {
-    // 与欢迎语同行
+    // 与输入token单价同行
     label: '应用图标',
     fieldName: 'appShow',
     component: 'ImageUpload',
@@ -216,7 +271,7 @@ export const modalSchema: FormSchemaGetter = () => [
     },
   },
   {
-    // 与输出token单价同行
+    // 与应用图标同行
     label: '输入token单价(元/千token)',
     // 标签较长，单独放宽该项label宽度避免换行
     labelWidth: 170,
