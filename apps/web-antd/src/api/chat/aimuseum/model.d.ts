@@ -172,9 +172,44 @@ export interface AimuseumVO {
   videoAlias?: string;
 
   /**
+   * AI视频标签置顶（JSON数组字符串，C端AI视频页命中的展示类别按此顺序排列在前）
+   */
+  videoTagPins?: string;
+
+  /**
    * VR模块别名（C端底部tabbar显示名，空=默认"虚拟空间"）
    */
   vrAlias?: string;
+
+  /**
+   * AI馆员页面欢迎方式（0欢迎语 1简介）
+   */
+  welcomeMode?: number;
+
+  /**
+   * AI馆员页面简介文案（welcomeMode=1时滚动展示）
+   */
+  introText?: string;
+
+  /**
+   * 简介语音播报开关（0关闭 1开启）
+   */
+  introVoiceEnable?: number;
+
+  /**
+   * 简介朗读方式（1上传配音 2语音合成）
+   */
+  introVoiceMode?: number;
+
+  /**
+   * 简介配音音频（ossId，朗读方式=上传配音时使用）
+   */
+  introVoiceUrl?: string;
+
+  /**
+   * 简介滚动速度（像素/秒，空=默认24）
+   */
+  introScrollSpeed?: number;
 
   /**
    * 智能体配置列表
@@ -336,9 +371,44 @@ export interface AimuseumForm extends BaseEntity {
   videoAlias?: string;
 
   /**
+   * AI视频标签置顶（表单内为标签数组，提交时序列化为JSON字符串存储）
+   */
+  videoTagPins?: string | string[];
+
+  /**
    * VR模块别名（C端底部tabbar显示名，空=默认"虚拟空间"）
    */
   vrAlias?: string;
+
+  /**
+   * AI馆员页面欢迎方式（0欢迎语 1简介）
+   */
+  welcomeMode?: number;
+
+  /**
+   * AI馆员页面简介文案（welcomeMode=1时滚动展示）
+   */
+  introText?: string;
+
+  /**
+   * 简介语音播报开关（0关闭 1开启）
+   */
+  introVoiceEnable?: number;
+
+  /**
+   * 简介朗读方式（1上传配音 2语音合成）
+   */
+  introVoiceMode?: number;
+
+  /**
+   * 简介配音音频（ossId，朗读方式=上传配音时使用）
+   */
+  introVoiceUrl?: string;
+
+  /**
+   * 简介滚动速度（像素/秒，空=默认24）
+   */
+  introScrollSpeed?: number;
 
   /**
    * 智能体配置列表

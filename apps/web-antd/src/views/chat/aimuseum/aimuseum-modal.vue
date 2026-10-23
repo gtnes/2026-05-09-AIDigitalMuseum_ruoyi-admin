@@ -33,9 +33,10 @@ import { aimuseumAdd, aimuseumInfo, aimuseumUpdate } from '#/api/chat/aimuseum';
 import { chatappAppList } from '#/api/chat/chatapp';
 import { videoCategoryOptions } from '#/api/video/category';
 import { voiceProfileVoices } from '#/api/voice/profile';
-import { ImageUpload } from '#/components/upload';
+import { FileUpload, ImageUpload } from '#/components/upload';
 
 import { modalSchema } from './data';
+import OssAudioPicker from './oss-audio-picker.vue';
 
 const emit = defineEmits<{ reload: [] }>();
 
@@ -273,6 +274,18 @@ watch(
   { immediate: true },
 );
 
+// 简介配音“选择文件”：放在文件名前面（字段插槽渲染，见模板），从OSS已上传的音频中选择
+const audioPickerRef = ref<InstanceType<typeof OssAudioPicker> | null>(null);
+
+function openAudioPicker() {
+  audioPickerRef.value?.open();
+}
+
+function onPickAudio(ossId: string) {
+  // FileUpload按ossId自动回显文件名
+  formApi.setValues({ introVoiceUrl: ossId });
+}
+
 const [BasicModal, modalApi] = useVbenModal({
   // 在这里更改宽度
   class: 'w-[1100px] !h-[88%] !max-h-[88%]',
@@ -316,6 +329,13 @@ const [BasicModal, modalApi] = useVbenModal({
           // 时间值 -> 日期字符串（配合 DatePicker valueFormat），兼容时间戳/日期字符串两种后端形态
           startTime: toDateText(record.startTime),
           endTime: toDateText(record.endTime),
+          // AI馆员页面设置旧数据无值时按默认回显（欢迎语/播报关闭/语音合成/24像素每秒）
+          welcomeMode: record.welcomeMode ?? 0,
+          introVoiceEnable: record.introVoiceEnable ?? 0,
+          introVoiceMode: record.introVoiceMode ?? 2,
+          introScrollSpeed: record.introScrollSpeed ?? 24,
+          // 标签置顶：JSON字符串解析为标签数组（Select tags模式回显）
+          videoTagPins: parseTagPins(record.videoTagPins),
         },
         // 跳过vben的defu深度合并：旧值若为对象会静默丢弃新写入的字符串，
         // 直接覆盖写入（vee-validate内部merge对字符串是直接赋值）
@@ -388,6 +408,21 @@ function toUnix(value: any): number | undefined {
   return d.isValid() ? d.unix() : undefined;
 }
 
+/** 标签置顶JSON字符串 -> 标签数组（Select tags模式回显；空/非法值返回空数组） */
+function parseTagPins(value: string | null | undefined): string[] {
+  if (!value) {
+    return [];
+  }
+  try {
+    const v = JSON.parse(value);
+    return Array.isArray(v)
+      ? v.map((t) => String(t).trim()).filter(Boolean)
+      : [];
+  } catch {
+    return [];
+  }
+}
+
 async function handleConfirm() {
   // 查看模式无确认按钮，此处仅作防御
   if (isView.value) {
@@ -442,6 +477,37 @@ async function handleConfirm() {
     if (data.videoEnable !== 1) {
       data.videoCategoryId = undefined;
       data.videoChatappId = undefined;
+      data.videoTagPins = '';
+    }
+    // 标签置顶：标签数组序列化为JSON字符串存储（去空去重保持输入顺序）
+    if (Array.isArray(data.videoTagPins)) {
+      const pins = Array.from(
+        new Set(data.videoTagPins.map((t) => t.trim()).filter(Boolean)),
+      );
+      data.videoTagPins = pins.length > 0 ? JSON.stringify(pins) : '';
+    }
+    // 简介配音：选择上传配音但未上传音频时给出明确指引
+    if (
+      data.welcomeMode === 1 &&
+      data.introVoiceEnable === 1 &&
+      data.introVoiceMode === 1 &&
+      !data.introVoiceUrl
+    ) {
+      message.warning('请上传简介配音音频');
+      return;
+    }
+    // 欢迎方式/播报/朗读方式关闭时清空下层关联配置，避免残留旧值
+    if (data.welcomeMode !== 1) {
+      data.introText = undefined;
+      data.introVoiceEnable = 0;
+      data.introVoiceMode = undefined;
+      data.introVoiceUrl = '';
+      data.introScrollSpeed = undefined;
+    } else if (data.introVoiceEnable !== 1) {
+      data.introVoiceMode = undefined;
+      data.introVoiceUrl = '';
+    } else if (data.introVoiceMode !== 1) {
+      data.introVoiceUrl = '';
     }
     data.chatapps = cloneDeep(chatappRows);
     // 域名配置：去除首尾空格并过滤空行
@@ -471,7 +537,25 @@ async function handleCancel() {
 
 <template>
   <BasicModal :title="title">
-    <BasicForm />
+    <BasicForm>
+      <!-- 上传配音：选择文件按钮放在文件名前面，避免suffix后缀渲染被overflow-hidden裁切遮挡 -->
+      <template #introVoiceUrl="slotProps">
+        <div class="flex w-full items-start gap-1">
+          <!-- 与FileUpload内部上传按钮同尺寸（默认middle），视觉一致 -->
+          <a-button
+            class="shrink-0"
+            :disabled="slotProps.disabled"
+            @click="openAudioPicker"
+          >
+            选择文件
+          </a-button>
+          <FileUpload
+            v-bind="slotProps"
+            class="min-w-0 flex-1"
+          />
+        </div>
+      </template>
+    </BasicForm>
     <!-- 域名配置：智能体配置上方，可配置多个域名，默认为空 -->
     <div class="border-t border-gray-200 px-4 pt-3 dark:border-gray-700">
       <div class="mb-2 flex items-center justify-between">
@@ -730,4 +814,7 @@ async function handleCancel() {
       </div>
     </div>
   </BasicModal>
+
+  <!-- 简介配音选择现有OSS音频 -->
+  <OssAudioPicker ref="audioPickerRef" @select="onPickAudio" />
 </template>

@@ -239,6 +239,149 @@ export const modalSchema: FormSchemaGetter = () => [
     },
   },
   {
+    label: '备注',
+    fieldName: 'remark',
+    component: 'Textarea',
+    formItemClass: 'col-span-2',
+  },
+  // ==================== AI馆员页面设置（C端AI馆员页欢迎区域） ====================
+  {
+    component: 'Divider',
+    fieldName: 'docentSettingsDivider',
+    formItemClass: 'col-span-2',
+    hideLabel: true,
+    componentProps: {
+      orientation: 'left',
+      orientationMargin: '0',
+    },
+    renderComponentContent: () => ({
+      default: () => 'AI馆员页面设置',
+    }),
+  },
+  {
+    // 欢迎方式：欢迎语=展示"你好，我是{智能体名}"；简介=滚动展示下方简介文案
+    formItemClass: 'col-span-2',
+    label: '欢迎方式',
+    fieldName: 'welcomeMode',
+    component: 'RadioGroup',
+    componentProps: {
+      options: [
+        { label: '欢迎语', value: 0 },
+        { label: '简介', value: 1 },
+      ],
+      buttonStyle: 'solid',
+      optionType: 'button',
+    },
+    defaultValue: 0,
+  },
+  {
+    // 简介文案：仅欢迎方式=简介时渲染，C端以滚动方式展示
+    formItemClass: 'col-span-2',
+    label: '简介',
+    fieldName: 'introText',
+    component: 'Textarea',
+    componentProps: {
+      placeholder:
+        '欢迎方式选择"简介"后，AI馆员页面将以滚动方式展示该文案，可开启语音播报自动朗读',
+      maxlength: 1000,
+      showCount: true,
+      rows: 3,
+    },
+    dependencies: {
+      if: (values) => values.welcomeMode === 1,
+      triggerFields: ['welcomeMode'],
+    },
+    rules: 'required',
+  },
+  {
+    // 简介语音播报：开启后C端进入AI馆员页自动朗读简介（与滚动速度同行）
+    label: '简介语音播报',
+    fieldName: 'introVoiceEnable',
+    component: 'RadioGroup',
+    componentProps: {
+      options: [
+        { label: '开启', value: 1 },
+        { label: '关闭', value: 0 },
+      ],
+      buttonStyle: 'solid',
+      optionType: 'button',
+    },
+    defaultValue: 0,
+    dependencies: {
+      if: (values) => values.welcomeMode === 1,
+      triggerFields: ['welcomeMode'],
+    },
+  },
+  {
+    // 简介滚动速度：C端简介文案纵向滚动速度，数值越大滚动越快，默认24像素/秒
+    label: '滚动速度',
+    fieldName: 'introScrollSpeed',
+    component: 'InputNumber',
+    componentProps: {
+      min: 1,
+      max: 120,
+      addonAfter: '像素/秒',
+      placeholder: '24',
+      style: { width: '100%' },
+    },
+    defaultValue: 24,
+    dependencies: {
+      if: (values) => values.welcomeMode === 1,
+      triggerFields: ['welcomeMode'],
+    },
+  },
+  {
+    // 朗读方式：上传配音需上传音频文件；语音合成使用智能体配置的AI语音（与上传配音同行）
+    label: '朗读方式',
+    fieldName: 'introVoiceMode',
+    component: 'RadioGroup',
+    componentProps: {
+      options: [
+        { label: '上传配音', value: 1 },
+        { label: '语音合成', value: 2 },
+      ],
+      buttonStyle: 'solid',
+      optionType: 'button',
+    },
+    defaultValue: 2,
+    dependencies: {
+      if: (values) => values.welcomeMode === 1 && values.introVoiceEnable === 1,
+      triggerFields: ['welcomeMode', 'introVoiceEnable'],
+    },
+  },
+  {
+    // 上传配音：朗读方式=上传配音时渲染，音频文件（ossId），与朗读方式同行
+    label: '上传配音',
+    fieldName: 'introVoiceUrl',
+    component: 'FileUpload',
+    componentProps: {
+      accept: '.mp3,.wav,.m4a,.aac,.ogg',
+      maxSize: 10,
+      maxCount: 1,
+    },
+    dependencies: {
+      if: (values) =>
+        values.welcomeMode === 1 &&
+        values.introVoiceEnable === 1 &&
+        values.introVoiceMode === 1,
+      triggerFields: ['welcomeMode', 'introVoiceEnable', 'introVoiceMode'],
+    },
+  },
+  // ==================== VR设置 ====================
+  {
+    component: 'Divider',
+    fieldName: 'vrSettingsDivider',
+    formItemClass: 'col-span-2',
+    hideLabel: true,
+    componentProps: {
+      orientation: 'left',
+      orientationMargin: '0',
+    },
+    renderComponentContent: () => ({
+      default: () => 'VR设置',
+    }),
+  },
+  {
     // 与VR地址同行
     label: 'VR开关',
     fieldName: 'vrEnable',
@@ -274,6 +417,20 @@ export const modalSchema: FormSchemaGetter = () => [
       placeholder: '不填默认显示"虚拟空间"',
       maxlength: 50,
     },
+  },
+  // ==================== AI视频设置 ====================
+  {
+    component: 'Divider',
+    fieldName: 'videoSettingsDivider',
+    formItemClass: 'col-span-2',
+    hideLabel: true,
+    componentProps: {
+      orientation: 'left',
+      orientationMargin: '0',
+    },
+    renderComponentContent: () => ({
+      default: () => 'AI视频设置',
+    }),
   },
   {
     // 独占一行，位于VR开关下方
@@ -320,6 +477,24 @@ export const modalSchema: FormSchemaGetter = () => [
     rules: 'selectRequired',
   },
   {
+    // AI视频讲解员左侧，与讲解员同行：C端AI视频页分类标签命中的按此顺序排列在前
+    label: '标签置顶',
+    fieldName: 'videoTagPins',
+    component: 'Select',
+    componentProps: {
+      // tags模式：手动输入多个标签回车确认，逗号自动分隔
+      mode: 'tags',
+      placeholder: '输入标签后回车，需与视频展示类别一致',
+      // 纯手动输入无预设选项，禁用下拉避免空面板
+      open: false,
+      tokenSeparators: [',', '，'],
+    },
+    dependencies: {
+      if: (values) => values.videoEnable === 1,
+      triggerFields: ['videoEnable'],
+    },
+  },
+  {
     label: 'AI视频讲解员',
     fieldName: 'videoChatappId',
     component: 'Select',
@@ -335,11 +510,5 @@ export const modalSchema: FormSchemaGetter = () => [
       triggerFields: ['videoEnable'],
     },
     rules: 'selectRequired',
-  },
-  {
-    label: '备注',
-    fieldName: 'remark',
-    component: 'Textarea',
-    formItemClass: 'col-span-2',
   },
 ];
